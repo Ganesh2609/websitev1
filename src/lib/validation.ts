@@ -1,17 +1,60 @@
 import { z } from "zod";
 
-export const UserFormValidation = z.object({
-  name: z
+export const LoginFormValidation = z.object({
+  username: z
     .string()
-    .min(2, "Name must be at least 2 characters")
-    .max(50, "Name must be at most 50 characters"),
-  email: z.string().email("Invalid email address"),
-  phone: z
-    .string()
-    .refine((phone) => /^\+\d{10,15}$/.test(phone), "Invalid phone number"),
+    .min(2, "Username must be at least 2 characters")
+    .max(50, "Username must be at most 50 characters"),
+  password: z
+    .string(),
 });
 
+export const RegisterFormValidation = z
+  .object({
+    username: z
+      .string()
+      .min(2, { message: "Username must be at least 2 characters long" })
+      .max(50, { message: "Username must be at most 50 characters long" })
+      .trim(),
+    phone: z
+      .string()
+      .refine((phone) => /^\+\d{10,15}$/.test(phone), "Invalid phone number"),
+    email: z
+      .string()
+      .email({ message: "Please enter a valid email address" })
+      .trim(),
+    password: z
+      .string()
+      .min(8, { message: "Password must be at least 8 characters long" })
+      .max(50, { message: "Password cannot be longer than 50 characters" })
+      // Separate refinements for each condition
+      .refine((password) => /[a-z]/.test(password), {
+        message: "Password must contain at least one lowercase letter",
+      })
+      .refine((password) => /[A-Z]/.test(password), {
+        message: "Password must contain at least one uppercase letter",
+      })
+      .refine((password) => /\d/.test(password), {
+        message: "Password must contain at least one number",
+      })
+      .refine((password) => /[@$!%*?&]/.test(password), {
+        message: "Password must contain at least one special character (@$!%*?&)",
+      }),
+    confirmPassword: z
+      .string()
+  })
+  // Check if password and confirmPassword match
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"], // Set error on the confirmPassword field
+  });
+
+
 export const PatientFormValidation = z.object({
+  username: z
+    .string()
+    .min(2, "Username must be at least 2 characters")
+    .max(50, "Username must be at most 50 characters"),
   name: z
     .string()
     .min(2, "Name must be at least 2 characters")

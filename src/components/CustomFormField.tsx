@@ -15,6 +15,7 @@ import {
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectTrigger, SelectValue } from "./ui/select";
 import { Textarea } from "./ui/textarea";
+import { PasswordInput } from "@/components/password-input";
 
 export enum FormFieldType {
   INPUT = "input",
@@ -23,6 +24,7 @@ export enum FormFieldType {
   CHECKBOX = "checkbox",
   DATE_PICKER = "datePicker",
   SELECT = "select",
+  PASSWORD = "password",
   SKELETON = "skeleton",
 }
 
@@ -42,6 +44,8 @@ interface CustomProps {
 }
 
 const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
+  
+
   switch (props.fieldType) {
     case FormFieldType.INPUT:
       return (
@@ -140,6 +144,28 @@ const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
             </SelectContent>
           </Select>
         </FormControl>
+      );
+    case FormFieldType.PASSWORD:
+      return (
+        <div className="flex rounded-md border border-dark-500 bg-dark-400">
+          {/* Icon handling */}
+          {props.iconSrc && (
+            <img
+              src={props.iconSrc}
+              height={24}
+              width={24}
+              alt={props.iconAlt || 'icon'}
+              className="ml-2"
+            />
+          )}
+          <FormControl>
+            <PasswordInput
+              placeholder={props.placeholder}  // Pass placeholder
+              {...field}  // Spread field props to handle value and onChange
+              className="shad-input border-0"  // Add custom classes
+            />
+          </FormControl>
+        </div>
       );
     case FormFieldType.SKELETON:
       return props.renderSkeleton ? props.renderSkeleton(field) : null;
