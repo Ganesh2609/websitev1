@@ -45,7 +45,7 @@ export const LoginForm = () => {
       if (loginResponse?.token) {
         localStorage.setItem("authToken", loginResponse.token);
 
-        navigate(`/patients/${loginResponse.user.userId}/home`);
+        navigate(`/patients/${loginResponse.user.user_id}/home`);
       } else {
         setLoginError("Invalid username or password");
       }

@@ -35,6 +35,8 @@ declare interface RegisterUserParams extends CreateUserParams {
     identificationType: string | undefined;
     identificationNumber: string | undefined;
     identificationDocument: FormData | undefined;
+    treatmentConsent: boolean;
+    disclosureConsent: boolean;
     privacyConsent: boolean;
 }
 
