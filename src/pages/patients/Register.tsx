@@ -6,9 +6,11 @@ import { getUser } from "@/lib/actions/patient.actions";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+import { User } from "@/types/types";
 const Register = () => {
   const { userId } = useParams(); // Extract userId from URL parameters
-  const [userData, setUserData] = useState({
+ 
+  const [userData, setUserData] = useState<User>({
     user_id: '',
     username: '',
     phone: '',

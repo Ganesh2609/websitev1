@@ -1,5 +1,5 @@
 // src/lib/actions/patient.actions.ts
-
+import { Patient } from "@/types/types";
 export const createUser = async (user: { username: string; email: string; phone: string; password: string }) => {
   try {
     const response = await fetch("http://localhost:5000/api/createUser", {
@@ -45,12 +45,11 @@ export const loginUser = async (credentials: { username: string; password: strin
   }
 };
 
-
-export const getUser = async (userId: string) => {
-  console.log(userId, "userId"); 
+export const getUser = async (user_id: string) => {
+  console.log(user_id, "userId"); 
   try {
     // Append userId as a query parameter in the URL
-    const response = await fetch(`http://localhost:5000/api/getUser?userId=${userId}`, {
+    const response = await fetch(`http://localhost:5000/api/getUser?user_id=${user_id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -71,35 +70,35 @@ export const getUser = async (userId: string) => {
     return null;
   }
 };
-declare type Gender = "Male" | "Female" | "Other";
-declare interface pat {
-  user_id: string;
-  fname: string;
-  lname: string;
-  email: string;
-  phone: string;
-  birthDate: Date;
-  gender: Gender;
-  address: string;
-  occupation: string;
-  emergencyContactName: string;
-  emergencyContactNumber: string;
-  primaryPhysician: string;
-  insuranceProvider: string;
-  insurancePolicyNumber: string;
-  allergies: string | undefined;
-  currentMedication: string | undefined;
-  familyMedicalHistory: string | undefined;
-  pastMedicalHistory: string | undefined;
-  identificationType: string | undefined;
-  identificationNumber: string | undefined;
-  identificationDocument: FormData | undefined;
-  treatmentConsent: boolean;
-  disclosureConsent: boolean;
-  privacyConsent: boolean;
-}
+
+export const getPatient = async (patient_id: string | undefined) => {
+  console.log(patient_id, "patientId"); 
+  try {
+    // Append userId as a query parameter in the URL
+    const response = await fetch(`http://localhost:5000/api/getPatient?patient_id=${patient_id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.log(response, "response");
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch patient data");
+    }
+
+    const patientData = await response.json(); // Parse the patient data from response
+    console.log(patientData, "patient Data");
+    return patientData;
+  } catch (error) {
+    console.error("Error fetching patient data:", error);
+    return null;
+  }
+};
+
 // Function to register a patient
-export const registerPatient = async (patient: pat) => {
+export const registerPatient = async (patient: Patient) => {
   try {
     console.log(patient, "patient in actions");
     // Create FormData to handle both JSON data and file upload
@@ -111,7 +110,7 @@ export const registerPatient = async (patient: pat) => {
     formData.append("lname", patient.lname);
     formData.append("email", patient.email);
     formData.append("phone", patient.phone);
-    formData.append("birthDate", patient.birthDate.toISOString()); // Convert date to ISO string
+    formData.append("birthDate", patient.date_of_birth.toISOString()); // Convert date to ISO string
     formData.append("gender", patient.gender);
     formData.append("address", patient.address);
     formData.append("occupation", patient.occupation);

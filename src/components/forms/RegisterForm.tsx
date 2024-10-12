@@ -18,8 +18,9 @@ import {
   PatientFormDefaultValues,
 } from "@/constants";
 
+// import {Partial } from "ts";
 import user_img from "@/assets/icons/user.svg";
-import email_img from "@/assets/icons/email.svg";
+// import email_img from "@/assets/icons/email.svg";
 
 import { registerPatient } from "@/lib/actions/patient.actions";
 import { PatientFormValidation } from "@/lib/validation";
@@ -30,12 +31,8 @@ import CustomFormField, { FormFieldType } from "@/components/CustomFormField";
 import { FileUploader } from "@/components/FileUploader";
 import SubmitButton from "@/components/SubmitButton";
 
-interface User {
-  user_id: string;
-  username: string;
-  phone: string;
-  email: string;
-}
+import { User, Patient } from "@/types/types";
+
 
 const RegisterForm = ({ user }: { user: User }) => {
   const navigate = useNavigate();
@@ -68,13 +65,15 @@ const RegisterForm = ({ user }: { user: User }) => {
     }
 
     try {
-      const patient = {
+ 
+      const patient: Patient= {
+        patient_id: undefined,
         user_id: user.user_id,
         fname: values.fname,
         lname: values.lname,
         email: user.email,
         phone: user.phone,
-        birthDate: new Date(values.birthDate),
+        date_of_birth: new Date(values.birthDate),
         gender: values.gender,
         address: values.address,
         occupation: values.occupation,
@@ -100,7 +99,7 @@ const RegisterForm = ({ user }: { user: User }) => {
       const newPatient = await registerPatient(patient);
 
       if (newPatient) {
-        navigate(`/patients/${user.user_id}/new-appointment`);
+        navigate(`/patients/${newPatient.user_id}/new-appointment`);
       }
     } catch (error) {
       console.log(error);

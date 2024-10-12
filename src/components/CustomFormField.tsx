@@ -1,9 +1,11 @@
-/* eslint-disable no-unused-vars */
+/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { E164Number } from "libphonenumber-js/core";
 import ReactDatePicker from "react-datepicker";
 import { Control } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
-
+import calendar_img from "@/assets/icons/calendar.svg";
 import { Checkbox } from "./ui/checkbox";
 import {
   FormControl,
@@ -26,9 +28,11 @@ export enum FormFieldType {
   SELECT = "select",
   PASSWORD = "password",
   SKELETON = "skeleton",
+  DATE_AVAILABILITY = "dateAvailability",
 }
 
 interface CustomProps {
+  onChange?: (value: any) => void;
   control: Control<any>;
   name: string;
   label?: string;
@@ -44,8 +48,6 @@ interface CustomProps {
 }
 
 const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
-  
-
   switch (props.fieldType) {
     case FormFieldType.INPUT:
       return (
@@ -130,10 +132,43 @@ const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
           </FormControl>
         </div>
       );
+    case FormFieldType.DATE_AVAILABILITY:
+      return (
+        <div className="flex rounded-md border border-dark-500 bg-dark-400">
+          <img
+            src={calendar_img}
+            height={24}
+            width={24}
+            alt="user"
+            className="ml-2"
+          />
+          <FormControl>
+            <ReactDatePicker
+              showTimeSelect={props.showTimeSelect ?? false}
+              selected={field.value}
+              onChange={(date: Date | null) => {
+                if (date) {
+                  // Truncate the time component
+                  const dateOnly = new Date(date);
+
+                  field.onChange(dateOnly); // Update form field with date only
+                  props.onChange?.(dateOnly); // Trigger custom handler with date only
+                }
+              }}
+              timeInputLabel="Time:"
+              dateFormat={props.dateFormat ?? "MM/dd/yyyy"}
+              wrapperClassName="date-picker"
+            />
+          </FormControl>
+        </div>
+      );
     case FormFieldType.SELECT:
       return (
         <FormControl>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <Select
+            onValueChange={field.onChange && props.onChange}
+            defaultValue={field.value}
+          >
             <FormControl>
               <SelectTrigger className="shad-select-trigger">
                 <SelectValue placeholder={props.placeholder} />
@@ -154,15 +189,15 @@ const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
               src={props.iconSrc}
               height={24}
               width={24}
-              alt={props.iconAlt || 'icon'}
+              alt={props.iconAlt || "icon"}
               className="ml-2"
             />
           )}
           <FormControl>
             <PasswordInput
-              placeholder={props.placeholder}  // Pass placeholder
-              {...field}  // Spread field props to handle value and onChange
-              className="shad-input border-0"  // Add custom classes
+              placeholder={props.placeholder} // Pass placeholder
+              {...field} // Spread field props to handle value and onChange
+              className="shad-input border-0" // Add custom classes
             />
           </FormControl>
         </div>

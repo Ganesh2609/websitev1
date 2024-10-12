@@ -6,7 +6,6 @@ import dotenv from "dotenv";
 import cors from "cors";
 import pkg from "pg";
 import multer from "multer";
-import path from "path";
 
 const { json } = pkg1;
 const { Pool } = pkg;
@@ -125,13 +124,13 @@ app.post("/api/login", async (req, res) => {
 
 // getUser Endpoint
 app.get("/api/getUser", async (req, res) => {
-  const { userId } = req.query; // Get userId from the query parameters
+  const { user_id } = req.query; // Get userId from the query parameters
 
   try {
     // Fetch user details from the database using userId
     const result = await pool.query(
       "SELECT user_id, username, role, phone, email FROM users WHERE user_id = $1",
-      [userId]
+      [user_id]
     );
 
     const user = result.rows[0];
@@ -148,6 +147,38 @@ app.get("/api/getUser", async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching user data", err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.get("/api/getPatient", async (req, res) => {
+  const { patient_id } = req.query; // Get userId from the query parameters
+
+  try {
+    // Fetch user details from the database using userId
+    const result = await pool.query(
+      "SELECT p.patient_id, p.user_id, p.fname, p.lname, p.email, p.phone, u.username FROM patients p JOIN users u ON p.user_id = u.user_id WHERE p.patient_id = $1",
+      [patient_id]
+    );
+
+    const patient = result.rows[0];
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+
+    // Send user data as response
+    res.json({
+      patient_id: patient.patient_id,
+      user_id: patient.user_id,
+      fname: patient.fname,
+      lname: patient.lname,
+
+      username: patient.username,
+      phone: patient.phone,
+      email: patient.email,
+    });
+  } catch (err) {
+    console.error("Error fetching Patient data", err);
     res.status(500).json({ error: "Database error" });
   }
 });
@@ -182,7 +213,7 @@ app.post(
       privacyConsent,
       disclosureConsent,
     } = req.body;
-    console.log(req.body)
+    console.log(req.body);
     const identificationDocumentUrl = req.file ? req.file.path : null;
     try {
       // Insert the new patient into the database
@@ -256,6 +287,159 @@ app.post(
     }
   }
 );
+
+// Get available slots for a doctor on a specific date
+app.post("/api/patients/new-appointments/getDates", async (req, res) => {
+  let { doctor_id, date } = req.body; // Doctor ID and date will be passed in the request body
+  if (!doctor_id || !date) {
+    return res.status(400).json({ error: "Missing doctor_id or date" });
+  }
+
+  try {
+    // Convert the date to 'YYYY-MM-DD' without timezone issues
+    const localDate = new Date(date);
+    const formattedDate = `${localDate.getFullYear()}-${String(
+      localDate.getMonth() + 1
+    ).padStart(2, "0")}-${String(localDate.getDate()).padStart(2, "0")}`;
+    console.log(formattedDate);
+
+    // Open a new client connection from the pool
+    const client = await pool.connect();
+
+    // Define the SQL query with the formatted date and doctor_id as parameters
+    const query = `
+      WITH available_slots AS (
+        SELECT slot_id, doctor_id, day_of_week, start_time
+        FROM appointment_slots
+        WHERE doctor_id = $1
+        AND day_of_week = TO_CHAR($2::DATE, 'FMDay')
+        AND is_available = TRUE
+      ),
+      unavailable_slots AS (
+        SELECT slot_id
+        FROM doctor_unavailability
+        WHERE doctor_id = $1
+        AND unavailable_date = $2::DATE
+      ),
+      pending_and_approved_slots AS (
+        SELECT slot_id
+        FROM appointment_requests
+        WHERE preferred_date = $2::DATE
+        AND preferred_doctor_id = $1
+        AND status IN ('pending', 'approved')
+      )
+      SELECT *
+      FROM available_slots
+      WHERE slot_id NOT IN (SELECT slot_id FROM unavailable_slots)
+      AND slot_id NOT IN (SELECT slot_id FROM pending_and_approved_slots);
+    `;
+
+    // Execute the query with the formatted date
+    const result = await client.query(query, [doctor_id, formattedDate]);
+    
+    // Return the available slots
+    if (result.rows.length > 0) {
+      res.status(200).json({ slots: result.rows });
+    } else {
+      res.status(200).json({ slots: [], message: "No available slots found" });
+    }
+
+    // Release the client back to the pool
+    client.release();
+  } catch (error) {
+    console.error("Error fetching available slots:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+app.get("/api/doctors/active", async (req, res) => {
+  try {
+    // Open a new client connection from the pool
+    const client = await pool.connect();
+    console.log("result.rows");
+    // Define the SQL query to get all active doctors
+    const query = `
+      SELECT doctor_id, first_name, last_name 
+      FROM doctors
+      WHERE status = 'active';
+    `;
+
+    // Execute the query
+    const result = await client.query(query);
+    console.log(result.rows);
+    // Return the list of doctors
+    res.status(200).json({ doctors: result.rows });
+
+    // Release the client back to the pool
+    client.release();
+  } catch (error) {
+    console.error("Error fetching active doctors:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+app.post('/api/appointments', async (req, res) => {
+  const {
+    userId,
+    patient,
+    preferredDoctorId,
+    preferredDate, // This will now be an ISO string
+    slotId,
+    reason,
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO appointment_requests (
+          patient_id,
+          preferred_doctor_id,
+          preferred_date,
+          slot_id,
+          reason
+        ) VALUES ($1, $2, $3, $4, $5)
+        RETURNING request_id`,
+      [patient, preferredDoctorId, preferredDate, slotId, reason]
+    );
+
+    const newAppointment = result.rows[0]; // Get the newly created appointment
+    console.log(newAppointment);
+    res.status(201).json(newAppointment); // Send the new appointment data back as a response
+  } catch (error) {
+    console.error('Error saving appointment:', error);
+    res.status(500).json({ error: 'Failed to create appointment' });
+  }
+});
+
+
+app.get('/api/getrequests/:request_id', async (req, res) => {
+  const { request_id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT asr.request_id, asl.slot_id, asl.day_of_week, asl.start_time, asr.reason, asr.status, d.first_name, d.last_name, asr.preferred_date
+        FROM appointment_requests asr
+        INNER JOIN appointment_slots asl
+        ON asr.slot_id = asl.slot_id
+        INNER JOIN doctors d
+        ON asr.preferred_doctor_id = d.doctor_id
+        WHERE asr.request_id = $1`,
+      [request_id]
+    );
+
+
+    const appointment = result.rows[0];
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    res.json(appointment);
+  } catch (error) {
+    console.error('Error fetching appointment:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 // Start the server
 app.listen(port, () => {

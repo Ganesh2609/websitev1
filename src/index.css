@@ -107,9 +107,9 @@
     @apply bg-clip-text text-transparent;
   }
 
-  .bg-image {
+  /* .bg-image {
     @apply bg-black-900 bg-light-rays bg-cover bg-no-repeat;
-  }
+  } */
 
   .header {
     @apply text-32-bold md:text-36-bold;
@@ -319,6 +319,10 @@
 
   .shad-otp-slot {
     @apply text-36-bold justify-center flex border border-dark-500 rounded-lg size-16 gap-4 !important;
+  }
+
+  .shad-otp-slot:hover {
+    @apply border-lime-500;
   }
 
   .shad-alert-dialog {

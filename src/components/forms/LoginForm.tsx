@@ -2,22 +2,43 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useNavigate } from "react-router-dom"; // Import from react-router-dom
+import { useNavigate } from "react-router-dom";
 
 import { Form } from "@/components/ui/form";
 import { loginUser } from "@/lib/actions/patient.actions";
-import { LoginFormValidation} from "@/lib/validation";
+import { LoginFormValidation } from "@/lib/validation";
 
 import "react-phone-number-input/style.css";
 import CustomFormField, { FormFieldType } from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
 
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  useDisclosure,
+} from "@nextui-org/react";
+
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+
 import user_img from "@/assets/icons/user.svg";
 import pass_img from "@/assets/icons/password.svg";
 
 export const LoginForm = () => {
-  const navigate = useNavigate(); // Use useNavigate instead of useRouter
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [passkey, setPasskey] = useState(""); // State for passkey input
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const form = useForm<z.infer<typeof LoginFormValidation>>({
     resolver: zodResolver(LoginFormValidation),
@@ -26,26 +47,36 @@ export const LoginForm = () => {
       password: "",
     },
   });
-  console.log("Form Errors: ", form.formState.errors);
-  const [loginError, setLoginError] = useState<string | null>(null);
 
   const onSubmit = async (values: z.infer<typeof LoginFormValidation>) => {
     setIsLoading(true);
-    setLoginError(null); // Reset error state
+    setLoginError(null);
 
     try {
       const credentials = {
         username: values.username,
         password: values.password,
       };
-      console.log(credentials);
       const loginResponse = await loginUser(credentials);
 
-      console.log(loginResponse);
       if (loginResponse?.token) {
+        // Store the JWT token in localStorage
         localStorage.setItem("authToken", loginResponse.token);
 
-        navigate(`/patients/${loginResponse.user.user_id}/home`);
+        // Decode the JWT to get user information (optional)
+        const decodedToken = JSON.parse(
+          atob(loginResponse.token.split(".")[1])
+        );
+        const userRole = decodedToken.role; // Assuming the role is included in the token payload
+
+        // Navigate based on user role
+        if (userRole === "admin") {
+          onOpen(); // Open passkey verification for admin
+        } else if (userRole === "doctor") {
+          navigate(`/doctor/${decodedToken.user_id}/home`);
+        } else {
+          navigate(`/patients/${decodedToken.user_id}/home`);
+        }
       } else {
         setLoginError("Invalid username or password");
       }
@@ -55,6 +86,16 @@ export const LoginForm = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePasskeySubmit = () => {
+    if (passkey === "101010") {
+      // If passkey is correct, navigate to admin home
+      navigate("/admin/home");
+    } else {
+      setPasskeyError("Invalid Passkey.");
+    }
+    onClose(); // Close the alert dialog
   };
 
   return (
@@ -80,10 +121,52 @@ export const LoginForm = () => {
           iconAlt="password"
         />
 
-        {/* Error message displayed here */}
         {loginError && <p className="text-red-500">{loginError}</p>}
+        {passkeyError && <p className="text-red-500">{passkeyError}</p>}
 
         <SubmitButton isLoading={isLoading}>Login</SubmitButton>
+        <Modal
+          backdrop={"blur"}
+          isOpen={isOpen}
+          onClose={onClose}
+          className="max-w-[515px]"
+        >
+          <ModalContent>
+            <>
+              <ModalHeader>Admin Passkey Verification</ModalHeader>
+              <ModalBody className="flex items-center justify-center space-x-2">
+                Please enter the passkey to access the admin panel.
+                <InputOTP
+                  maxLength={6}
+                  value={passkey}
+                  onChange={(values) => setPasskey(values)}
+                >
+                  <InputOTPGroup className="shad-otp gap-3">
+                    <InputOTPSlot className="shad-otp-slot" index={0} />
+                    <InputOTPSlot className="shad-otp-slot" index={1} />
+                    <InputOTPSlot className="shad-otp-slot" index={2} />
+                    <InputOTPSlot className="shad-otp-slot" index={3} />
+                    <InputOTPSlot className="shad-otp-slot" index={4} />
+                    <InputOTPSlot className="shad-otp-slot" index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Cancel
+                </Button>
+                <Button
+                  color="success"
+                  onPress={() => {
+                    handlePasskeySubmit();
+                  }}
+                >
+                  Continue
+                </Button>
+              </ModalFooter>
+            </>
+          </ModalContent>
+        </Modal>
       </form>
     </Form>
   );
