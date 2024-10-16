@@ -25,7 +25,6 @@ import {
 import {
   InputOTP,
   InputOTPGroup,
-  InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 
@@ -53,29 +52,24 @@ export const LoginForm = () => {
     setLoginError(null);
 
     try {
-      const credentials = {
+      const loginData = await loginUser({
         username: values.username,
         password: values.password,
-      };
-      const loginResponse = await loginUser(credentials);
+      });
 
-      if (loginResponse?.token) {
-        // Store the JWT token in localStorage
-        localStorage.setItem("authToken", loginResponse.token);
-
-        // Decode the JWT to get user information (optional)
-        const decodedToken = JSON.parse(
-          atob(loginResponse.token.split(".")[1])
-        );
-        const userRole = decodedToken.role; // Assuming the role is included in the token payload
+      if (loginData && loginData.token) {
+        localStorage.setItem('authToken', loginData.token);
+        
+        // Use the user information from the login response
+        const { role, user_id } = loginData.user;
 
         // Navigate based on user role
-        if (userRole === "admin") {
+        if (role === "admin") {
           onOpen(); // Open passkey verification for admin
-        } else if (userRole === "doctor") {
-          navigate(`/doctor/${decodedToken.user_id}/home`);
+        } else if (role === "doctor") {
+          navigate(`/doctor/${user_id}/home`);
         } else {
-          navigate(`/patients/${decodedToken.user_id}/home`);
+          navigate(`/patients/${user_id}/home`);
         }
       } else {
         setLoginError("Invalid username or password");

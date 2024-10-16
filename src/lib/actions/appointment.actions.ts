@@ -1,17 +1,7 @@
 "use server";
 
-// import { revalidatePath } from "next/cache";
-// import { ID, Query } from "node-appwrite";
+import { Appointment } from "@/types/types";
 
-// import { Appointment } from "@/types/types";
-
-// import {
-//   APPOINTMENT_COLLECTION_ID,
-//   DATABASE_ID,
-//   databases,
-//   messaging,
-// } from "../appwrite.config";
-// import { formatDateTime, parseStringify } from "../utils";
 import axios from 'axios';
 
 export const getDates = async (formData: { doctor_id: string; date: Date | null }) => {
@@ -81,4 +71,63 @@ export const getRequests = async (request_id: string | undefined) => {
   }
 };
 
+
+
+interface AppointmentCounts {
+  scheduledCount: number;
+  completedCount: number;
+  cancelledCount: number;
+  no_showCount: number;
+}
+
+export const getRecentAppointments = async (limit?: number) => {
+  try {
+    const url = `http://localhost:5000/api/recentappointments${limit ? `?limit=${limit}` : ''}`;
+    const response = await axios.get(url);
+
+    const appointments: Appointment[] = response.data;
+
+    const initialCounts: AppointmentCounts = {
+      scheduledCount: 0,
+      completedCount: 0,
+      cancelledCount: 0,
+      no_showCount: 0,
+    };
+
+    const counts = appointments.reduce(
+      (acc: AppointmentCounts, appointment: Appointment) => {
+        switch (appointment.status) {
+          case "scheduled":
+            acc.scheduledCount++;
+            break;
+          case "completed":
+            acc.completedCount++;
+            break;
+          case "cancelled":
+            acc.cancelledCount++;
+            break;
+          case "no_show":
+            acc.no_showCount++;
+            break;
+          default:
+            console.warn(`Unknown appointment status: ${appointment.status}`);
+        }
+        return acc;
+      },
+      initialCounts
+    );
+
+    return {
+      totalCount: appointments.length,
+      ...counts,
+      appointments,
+    };
+  } catch (error) {
+    console.error(
+      "An error occurred while retrieving the recent appointments:",
+      error
+    );
+    return { totalCount: 0, scheduledCount: 0, completedCount: 0, cancelledCount: 0, no_showCount: 0, appointments: [] }; // Graceful fallback
+  }
+};
 

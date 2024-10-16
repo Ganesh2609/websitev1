@@ -183,9 +183,74 @@ app.get("/api/getPatient", async (req, res) => {
   }
 });
 
+app.get("/api/getDoctor", async (req, res) => {
+  const { doctor_id } = req.query;
+
+  try {
+    const result = await pool.query(
+      "SELECT doctor_id, first_name, last_name FROM doctors WHERE doctor_id = $1",
+      [doctor_id]
+    );
+
+    const doctor = result.rows[0];
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    res.json({
+      doctor_id: doctor.doctor_id,
+      first_name: doctor.first_name,
+      last_name: doctor.last_name,
+    });
+  } catch (error) {
+    console.error("Error fetching doctor data:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/api/getrequests/date", async (req, res) => {
+  const { request_id } = req.query;
+
+  try {
+    const result = await pool.query(
+      "SELECT preferred_date FROM appointment_requests WHERE request_id = $1",
+      [request_id]
+    );
+
+    const preferred_date = result.rows[0]?.preferred_date;
+    if (!preferred_date) {
+      return res.status(404).json({ message: "No preferred date found" });
+    }
+
+    res.json({date: preferred_date });
+  } catch (error) {
+    console.error("Error fetching preferred date:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/api/getrequests/starttime", async (req, res) => {
+  const { slot_id } = req.query;
+
+  try {
+    const result = await pool.query(
+      "SELECT start_time FROM appointment_slots WHERE slot_id = $1",
+      [slot_id]
+    );
+
+    const start_time = result.rows[0]?.start_time;
+    if (!start_time) {
+      return res.status(404).json({ message: "No start time found" });
+    }
+
+    res.json({start_time });
+  } catch (error) {
+    console.error("Error fetching start time:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 // Handle patient registration
-app.post(
-  "/api/patients/register",
+app.post("/api/patients/register",
   upload.single("identificationDocument"),
   async (req, res) => {
     const {
@@ -441,6 +506,24 @@ app.get('/api/getrequests/:request_id', async (req, res) => {
   }
 });
 
+app.get('/api/recentappointments', async (req, res) => {
+  const limit = req.query.limit;
+
+  try {
+    const result = await pool.query(
+      `SELECT a.appointment_id, a.patient_id, a.doctor_id, a.slot_id, a.request_id, a.status, a.doctor_notes, a.patient_feedback, a.created_at
+      FROM appointments a
+      ORDER BY a.created_at DESC
+      ${limit ? `LIMIT ${limit}` : ''}`,
+    );
+
+    const appointments = result.rows;
+    res.json(appointments);
+  } catch (error) {
+    console.error('Error fetching recent appointments:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

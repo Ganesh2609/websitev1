@@ -97,6 +97,83 @@ export const getPatient = async (patient_id: string | undefined) => {
   }
 };
 
+export const getDoctor = async (doctor_id: string | undefined) => {
+  console.log(doctor_id, "doctorId"); 
+  try {
+    // Append userId as a query parameter in the URL
+    const response = await fetch(`http://localhost:5000/api/getDoctor?doctor_id=${doctor_id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.log(response, "response");
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch doctor data");
+    }
+
+    const doctorData = await response.json(); // Parse the doctor data from response
+    console.log(doctorData, "doctor Data");
+    return doctorData;
+  } catch (error) {
+    console.error("Error fetching doctor data:", error);
+    return null;
+  }
+};
+
+
+export const getRequestDate = async (request_id: string | undefined) => {
+  try {
+    // Append request_id as a query parameter in the URL
+    const response = await fetch(`http://localhost:5000/api/getrequests/date?request_id=${request_id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.log(response, "response");
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch preferred date");
+    }
+
+    const preferredDate = await response.json(); // Parse the preferred date from response
+    console.log(preferredDate, "preferred date");
+    return preferredDate;
+  } catch (error) {
+    console.error("Error fetching preferred date:", error);
+    return null;
+  }
+};
+
+export const getRequestStartTime = async (slot_id: string | undefined) => {
+  try {
+    const response = await fetch(`http://localhost:5000/api/getrequests/starttime?slot_id=${slot_id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.log(response, "response");
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch start time");
+    }
+
+    const startTime = await response.json(); // Parse the start time from response
+    console.log(startTime, "start time");
+    return startTime;
+  } catch (error) {
+    console.error("Error fetching start time:", error);
+    return null;
+  }
+};
+
+
 // Function to register a patient
 export const registerPatient = async (patient: Patient) => {
   try {

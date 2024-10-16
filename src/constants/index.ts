@@ -1,3 +1,13 @@
+import dr_cameron from "@/assets/images/dr-cameron.png";
+import dr_cruz from "@/assets/images/dr-cruz.png";
+import dr_green from "@/assets/images/dr-green.png";
+import dr_lee from "@/assets/images/dr-lee.png";
+import dr_livingston from "@/assets/images/dr-livingston.png";
+import dr_peter from "@/assets/images/dr-peter.png";
+import dr_powell from "@/assets/images/dr-powell.png";
+import dr_remirez from "@/assets/images/dr-remirez.png";
+import dr_sharma from "@/assets/images/dr-sharma.png";
+
 export const GenderOptions = ["Male", "Female", "Other"];
 
 export const PatientFormDefaultValues = {
@@ -41,40 +51,40 @@ export const IdentificationTypes = [
 
 export const Doctors = [
   {
-    image: "@/assets/images/dr-green.png",
-    name: "John Green",
+    image: dr_green,
+    name: "John Smith",
   },
   {
-    image: "@/assets/images/dr-cameron.png",
-    name: "Leila Cameron",
+    image: dr_cameron,
+    name: "Emma Johnson",
   },
   {
-    image: "@/assets/images/dr-livingston.png",
-    name: "David Livingston",
+    image: dr_livingston,
+    name: "Michael Williams",
+  },
+  // {
+  //   image: dr_peter,
+  //   name: "Evan Peter",
+  // },
+  {
+    image: dr_powell,
+    name: "Olivia Jones",
   },
   {
-    image: "@/assets/images/dr-peter.png",
-    name: "Evan Peter",
+    image: dr_remirez,
+    name: "William Brown",
   },
   {
-    image: "@/assets/images/dr-powell.png",
-    name: "Jane Powell",
+    image: dr_lee,
+    name: "Sophia Davis",
   },
+  // {
+  //   image: dr_cruz,
+  //   name: "Alyana Cruz",
+  // },
   {
-    image: "@/assets/images/dr-remirez.png",
-    name: "Alex Ramirez",
-  },
-  {
-    image: "@/assets/images/dr-lee.png",
-    name: "Jasmine Lee",
-  },
-  {
-    image: "@/assets/images/dr-cruz.png",
-    name: "Alyana Cruz",
-  },
-  {
-    image: "@/assets/images/dr-sharma.png",
-    name: "Hardik Sharma",
+    image: dr_sharma,
+    name: "James Miller",
   },
 ];
 
@@ -83,3 +93,4 @@ export const StatusIcon = {
   pending: "@/assets/icons/pending.svg",
   cancelled: "@/assets/icons/cancelled.svg",
 };
+

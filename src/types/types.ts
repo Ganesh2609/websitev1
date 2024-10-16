@@ -2,7 +2,7 @@
 
 
 export type Gender = "Male" | "Female" | "Other";
-export type Status = "pending" | "scheduled" | "cancelled";
+export type Status = "completed" | "scheduled" | "cancelled" | "no_show";
 
 
 
@@ -41,18 +41,30 @@ export interface Patient {
   disclosureConsent: boolean;
 }
 
-
-// Define Appointment interface
 export interface Appointment {
   appointment_id: string;
-  patient: Patient;
-  schedule: Date;
+  doctor_id: string;
+  patient_id: string;
+  slot_id: string;
+  request_id: string;
   status: Status;
-  primaryPhysician: string;
-  reason: string;
-  userId: string;
-  cancellationReason: string | null;
+  doctor_notes: string;
+  patient_feedback: string;
+  doctorFirstName: string;
+  doctorLastName: string;
+  patientFirstName: string;
+  patientLastName: string;
+  date: string;
+  time: string;
 }
+
+export interface AppointmentsState {
+  appointments: Appointment[];
+  scheduledCount: number;
+  pendingCount: number;
+  cancelledCount: number;
+}
+
 
 export interface Appointment_request {
   request_id: string;
@@ -63,6 +75,7 @@ export interface Appointment_request {
   reason: string;
   status: Status;
 }
+
 export type Doctor = {
   doctor_id: string;
   user_id: string;

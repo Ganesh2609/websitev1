@@ -25,8 +25,10 @@ import {
   Button,
   useDisclosure,
   Chip,
+  Image,
 } from "@nextui-org/react";
 import { RadioButtonGroup } from "@/components/RadioButtonGroup";
+import { Doctors } from "@/constants";
 
 export const AppointmentForm = ({
   userId,
@@ -190,6 +192,13 @@ export const AppointmentForm = ({
     setSelectedTimeSlot({ time: "No time slot selected", id: null });
   };
 
+  const getDoctorIcon = (firstName: string, lastName: string) => {
+    const doctor = Doctors.find(
+      (doc) => `${doc.name}` === `${firstName} ${lastName}`
+    );
+    return doctor ? doctor.image : null;
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 space-y-6">
@@ -199,7 +208,6 @@ export const AppointmentForm = ({
             Request a new appointment in 10 seconds.
           </p>
         </section>
-
         <CustomFormField
           fieldType={FormFieldType.SELECT}
           control={form.control}
@@ -208,13 +216,25 @@ export const AppointmentForm = ({
           label="Doctor"
           placeholder="Select a doctor"
         >
-          {doctors.map((doctor) => (
-            <SelectItem key={doctor.doctor_id} value={doctor.doctor_id}>
-              {doctor.first_name} {doctor.last_name}
-            </SelectItem>
-          ))}
+          {doctors.map((doctor) => {
+            const icon = getDoctorIcon(doctor.first_name, doctor.last_name);
+            return (
+              <SelectItem key={doctor.doctor_id} value={doctor.doctor_id}>
+                {icon && (
+                  <img
+                    src={icon}
+                    alt={`${doctor.first_name} ${doctor.last_name} icon`}
+                    width={24}
+                    height={24}
+                    className="inline-block mr-2"
+                  />
+                )}
+                {doctor.first_name} {doctor.last_name}
+              </SelectItem>
+            );
+          })}
         </CustomFormField>
-
+        
         <CustomFormField
           fieldType={FormFieldType.DATE_AVAILABILITY}
           control={form.control}
@@ -223,7 +243,6 @@ export const AppointmentForm = ({
           label="Expected appointment date"
           dateFormat="MM/dd/yyyy"
         />
-
         <Button
           variant="shadow"
           color="success"
@@ -232,7 +251,6 @@ export const AppointmentForm = ({
         >
           <b>Select Available Slots</b>
         </Button>
-
         <Chip
           className="ml-2"
           key={1}
@@ -242,7 +260,6 @@ export const AppointmentForm = ({
         >
           {selectedTimeSlot.time}
         </Chip>
-
         <Modal backdrop={"blur"} isOpen={isOpen} onClose={onClose}>
           <ModalContent>
             <>
@@ -264,9 +281,7 @@ export const AppointmentForm = ({
             </>
           </ModalContent>
         </Modal>
-
         {errorMessage && <div className="text-red-500">{errorMessage}</div>}
-
         <CustomFormField
           fieldType={FormFieldType.TEXTAREA}
           control={form.control}
@@ -274,7 +289,6 @@ export const AppointmentForm = ({
           label="Reason"
           placeholder="Reason for your visit"
         />
-
         <SubmitButton isLoading={isLoading} className="bg-green-500 text-white">
           Book Appointment
         </SubmitButton>
