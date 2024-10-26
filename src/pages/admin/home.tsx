@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import logo from "@/assets/icons/logo-full.svg";
 import appointmentsImg from "@/assets/icons/appointments.svg";
 import pendingImg from "@/assets/icons/pending.svg";
@@ -64,7 +64,7 @@ const AdminPage = () => {
     fetchAppointments();
   }, []);
 
-  
+
   
   
 

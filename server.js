@@ -1,11 +1,11 @@
 import express from "express";
 import pkg1 from "body-parser";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import cors from "cors";
 import pkg from "pg";
 import multer from "multer";
+import { request } from "http";
 
 const { json } = pkg1;
 const { Pool } = pkg;
@@ -108,14 +108,38 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // If password is correct, generate JWT token
-    const token = jwt.sign(
-      { userId: user.user_id, role: user.role },
-      process.env.JWT_SECRET, // Secret key from environment variables
-      { expiresIn: "1h" }
-    );
+    // If the login was successful, the server will return a user_id and a role.
+    // We check if these values are present in the response before proceeding.
+    if (!user.user_id || !user.role) {
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
 
-    res.json({ token, user: { username: user.username, role: user.role } });
+    // If role is doctor, return doctor_id
+    // If role is patient, return patient_id
+    let doctorId, patientId;
+    if (user.role === "doctor") {
+      const doctorResult = await pool.query(
+        "SELECT doctor_id FROM doctors WHERE user_id = $1",
+        [user.user_id]
+      );
+      doctorId = doctorResult.rows[0]?.doctor_id;
+      console.log(doctorId);
+    } else if (user.role === "patient") {
+      const patientResult = await pool.query(
+        "SELECT patient_id FROM patients WHERE user_id = $1",
+        [user.user_id]
+      );
+      patientId = patientResult.rows[0]?.patient_id;
+    }
+
+    res.json({
+      user: {
+        user_id: user.user_id,
+        role: user.role,
+        doctorId,
+        patientId,
+      },
+    });
   } catch (err) {
     console.error("Error logging in", err);
     res.status(500).json({ error: "Database error" });
@@ -222,7 +246,7 @@ app.get("/api/getrequests/date", async (req, res) => {
       return res.status(404).json({ message: "No preferred date found" });
     }
 
-    res.json({date: preferred_date });
+    res.json({ date: preferred_date });
   } catch (error) {
     console.error("Error fetching preferred date:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -243,14 +267,15 @@ app.get("/api/getrequests/starttime", async (req, res) => {
       return res.status(404).json({ message: "No start time found" });
     }
 
-    res.json({start_time });
+    res.json({ start_time });
   } catch (error) {
     console.error("Error fetching start time:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
 // Handle patient registration
-app.post("/api/patients/register",
+app.post(
+  "/api/patients/register",
   upload.single("identificationDocument"),
   async (req, res) => {
     const {
@@ -401,7 +426,7 @@ app.post("/api/patients/new-appointments/getDates", async (req, res) => {
 
     // Execute the query with the formatted date
     const result = await client.query(query, [doctor_id, formattedDate]);
-    
+
     // Return the available slots
     if (result.rows.length > 0) {
       res.status(200).json({ slots: result.rows });
@@ -416,7 +441,6 @@ app.post("/api/patients/new-appointments/getDates", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 app.get("/api/doctors/active", async (req, res) => {
   try {
@@ -444,8 +468,7 @@ app.get("/api/doctors/active", async (req, res) => {
   }
 });
 
-
-app.post('/api/appointments', async (req, res) => {
+app.post("/api/appointments", async (req, res) => {
   const {
     userId,
     patient,
@@ -472,13 +495,12 @@ app.post('/api/appointments', async (req, res) => {
     console.log(newAppointment);
     res.status(201).json(newAppointment); // Send the new appointment data back as a response
   } catch (error) {
-    console.error('Error saving appointment:', error);
-    res.status(500).json({ error: 'Failed to create appointment' });
+    console.error("Error saving appointment:", error);
+    res.status(500).json({ error: "Failed to create appointment" });
   }
 });
 
-
-app.get('/api/getrequests/:request_id', async (req, res) => {
+app.get("/api/getrequests/:request_id", async (req, res) => {
   const { request_id } = req.params;
 
   try {
@@ -493,7 +515,6 @@ app.get('/api/getrequests/:request_id', async (req, res) => {
       [request_id]
     );
 
-
     const appointment = result.rows[0];
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found" });
@@ -501,12 +522,72 @@ app.get('/api/getrequests/:request_id', async (req, res) => {
 
     res.json(appointment);
   } catch (error) {
-    console.error('Error fetching appointment:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Error fetching appointment:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-app.get('/api/recentappointments', async (req, res) => {
+app.get("/api/getrequestbydoctor/:doctor_id", async (req, res) => {
+  let { doctor_id } = req.params;
+  // console.log(doctor_id);
+  try {
+    const result = await pool.query(
+      `SELECT asr.request_id, asl.slot_id, asl.day_of_week, asl.start_time, asr.reason, asr.status, asr.preferred_date, p.fname, p.lname
+        FROM appointment_requests asr
+        INNER JOIN appointment_slots asl
+        ON asr.slot_id = asl.slot_id
+        INNER JOIN doctors d
+        ON asr.preferred_doctor_id = d.doctor_id
+        INNER JOIN patients p
+        ON asr.patient_id = p.patient_id
+        WHERE asr.preferred_doctor_id = $1
+        AND asr.status = 'pending'`,
+      [doctor_id]
+    );
+    // console.log(result.rows);
+    const appointments = result.rows;
+    // console.log(appointments);
+    if (!appointments.length) {
+      return res.status(404).json({ message: "No appointments found" });
+    }
+
+    res.json(appointments);
+  } catch (error) {
+    console.error("Error fetching appointment:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/api/getrequestbypatient/:patient_id", async (req, res) => {
+  let { patient_id } = req.params;
+  console.log(patient_id);
+  try {
+    const result = await pool.query(
+      `SELECT asr.request_id, asl.slot_id, asl.day_of_week, asl.start_time, asr.reason, asr.status, asr.preferred_date, d.first_name, d.last_name
+        FROM appointment_requests asr
+        INNER JOIN appointment_slots asl
+        ON asr.slot_id = asl.slot_id
+        INNER JOIN doctors d
+        ON asr.preferred_doctor_id = d.doctor_id
+        WHERE asr.patient_id = $1
+        AND asr.status = 'pending'`,
+      [patient_id]
+    );
+    // console.log(result.rows);
+    const appointments = result.rows;
+    // console.log(appointments);
+    if (!appointments.length) {
+      return res.status(404).json({ message: "No appointments found" });
+    }
+
+    res.json(appointments);
+  } catch (error) {
+    console.error("Error fetching appointment:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/api/recentappointments", async (req, res) => {
   const limit = req.query.limit;
 
   try {
@@ -514,16 +595,544 @@ app.get('/api/recentappointments', async (req, res) => {
       `SELECT a.appointment_id, a.patient_id, a.doctor_id, a.slot_id, a.request_id, a.status, a.doctor_notes, a.patient_feedback, a.created_at
       FROM appointments a
       ORDER BY a.created_at DESC
-      ${limit ? `LIMIT ${limit}` : ''}`,
+      ${limit ? `LIMIT ${limit}` : ""}`
     );
 
     const appointments = result.rows;
     res.json(appointments);
   } catch (error) {
-    console.error('Error fetching recent appointments:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Error fetching recent appointments:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+// Approve appointment endpoint
+app.post("/api/appointments/approve", async (req, res) => {
+  const { requestId, doctorId } = req.body;
+  const client = await pool.connect();
+  console.log("hiiiiiii");
+  try {
+    await client.query("BEGIN");
+    console.log(requestId, doctorId);
+    // Check if the request exists and is still pending
+    const checkRequest = await client.query(
+      `SELECT status FROM appointment_requests 
+       WHERE request_id = $1 AND preferred_doctor_id = $2`,
+      [requestId, doctorId]
+    );
+    console.log(checkRequest);
+    if (checkRequest.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment request not found",
+      });
+    }
+
+    if (checkRequest.rows[0].status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Appointment request has already been processed",
+      });
+    }
+
+    // Update the request status to approved
+    await client.query(
+      `UPDATE appointment_requests 
+       SET status = 'approved', 
+           updated_at = CURRENT_TIMESTAMP
+       WHERE request_id = $1 AND preferred_doctor_id = $2`,
+      [requestId, doctorId]
+    );
+
+    // Create a new appointment in the appointments table
+    await client.query(
+      `INSERT INTO appointments (
+        doctor_id, 
+        patient_id, 
+        date,
+        slot_id, 
+        reason,
+        status,
+        request_id
+      )
+      SELECT 
+        $2,
+        patient_id,
+        preferred_date,
+        slot_id,
+        reason,
+        'scheduled',
+        request_id
+      FROM appointment_requests
+      WHERE request_id = $1`,
+      [requestId, doctorId]
+    );
+
+    await client.query("COMMIT");
+
+    res.status(200).json({
+      success: true,
+      message: "Appointment successfully approved",
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error approving appointment:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to approve appointment",
+      error: error.message,
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// Reject appointment endpoint
+app.post("/api/appointments/reject", async (req, res) => {
+  const { requestId, doctorId } = req.body;
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // Check if the request exists and is still pending
+    const checkRequest = await client.query(
+      `SELECT status FROM appointment_requests 
+       WHERE id = $1 AND doctor_id = $2`,
+      [requestId, doctorId]
+    );
+
+    if (checkRequest.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment request not found",
+      });
+    }
+
+    if (checkRequest.rows[0].status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Appointment request has already been processed",
+      });
+    }
+
+    // Update the request status to rejected
+    await client.query(
+      `UPDATE appointment_requests 
+       SET status = 'rejected',
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1 AND doctor_id = $2`,
+      [requestId, doctorId]
+    );
+
+    await client.query("COMMIT");
+
+    res.status(200).json({
+      success: true,
+      message: "Appointment successfully rejected",
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error rejecting appointment:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to reject appointment",
+      error: error.message,
+    });
+  } finally {
+    client.release();
+  }
+});
+
+app.get("/api/appointments/:doctorId", async (req, res) => {
+  const { doctorId } = req.params;
+  const client = await pool.connect();
+
+  console.log("doctorId", doctorId);
+
+  try {
+    // First query: Get appointment details
+    const appointmentsQuery = `
+      SELECT 
+        a.appointment_id,
+        a.reason,
+        a.date,
+        a.status,
+        a.doctor_notes,
+        a.patient_feedback,
+        p.fname as patient_first_name,
+        p.lname as patient_last_name,
+        slots.start_time,
+        d.first_name as doctor_first_name,
+        d.last_name as doctor_last_name
+      FROM appointments a
+      JOIN patients p ON a.patient_id = p.patient_id
+      JOIN appointment_slots slots ON a.slot_id = slots.slot_id
+      JOIN doctors d ON a.doctor_id = d.doctor_id
+      WHERE a.doctor_id = $1
+      ORDER BY a.date DESC, slots.start_time ASC
+    `;
+
+    // Second query: Get status counts
+    const countsQuery = `
+      SELECT 
+        COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled,
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed,
+        COUNT(CASE WHEN status = 'canceled' THEN 1 END) as cancelled
+      FROM appointments
+      WHERE doctor_id = $1
+    `;
+
+    // Execute both queries concurrently
+    const [appointmentsResult, countsResult] = await Promise.all([
+      client.query(appointmentsQuery, [doctorId]),
+      client.query(countsQuery, [doctorId]),
+    ]);
+
+    console.log("appointmentsResult", appointmentsResult.rows);
+    console.log("countsResult", countsResult.rows);
+
+    res.status(200).json({
+      success: true,
+      appointments: appointmentsResult.rows,
+      doctor: {
+        first_name: appointmentsResult.rows[0]?.doctor_first_name,
+        last_name: appointmentsResult.rows[0]?.doctor_last_name,
+      },
+      counts: countsResult.rows[0],
+    });
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch appointments",
+      error: error.message,
+    });
+  } finally {
+    client.release();
+  }
+});
+
+app.get("/api/appointments/patient/:patientId", async (req, res) => {
+  const { patientId } = req.params;
+  const client = await pool.connect();
+
+  if (!patientId) {
+    return res.status(400).json({
+      success: false,
+      message: "Patient ID is required",
+    });
+  }
+
+  console.log("patientId", patientId);
+
+  try {
+    // First query: Get appointment details
+    const appointmentsQuery = `
+      SELECT 
+        a.appointment_id,
+        a.reason,
+        a.date,
+        a.status,
+        a.doctor_notes,
+        a.patient_feedback,
+        p.fname as patient_first_name,
+        p.lname as patient_last_name,
+        slots.start_time,
+        d.first_name as doctor_first_name,
+        d.last_name as doctor_last_name
+      FROM appointments a
+      JOIN patients p ON a.patient_id = p.patient_id
+      JOIN appointment_slots slots ON a.slot_id = slots.slot_id
+      JOIN doctors d ON a.doctor_id = d.doctor_id
+      WHERE a.patient_id = $1
+      ORDER BY a.date DESC, slots.start_time ASC
+    `;
+    console.log("appointmentsQuery", patientId);
+    const appointmentsResult = await client.query(appointmentsQuery, [
+      patientId,
+    ]);
+    console.log("appointmentsResult", appointmentsResult.rows);
+    res.status(200).json({
+      success: true,
+      appointments: appointmentsResult.rows,
+      patient: {
+        first_name: appointmentsResult.rows[0]?.patient_first_name,
+        last_name: appointmentsResult.rows[0]?.patient_last_name,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch appointments",
+      error: error.message,
+    });
+  } finally {
+    client.release();
+  }
+});
+
+app.post("/api/appointments/:id/complete", async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const { id } = req.params;
+    const {
+      doctorNotes,
+      billingAmount,
+      doctorId,
+      treatments, // New field for treatments array
+    } = req.body;
+
+    // Validate input
+    if (
+      !doctorNotes ||
+      !billingAmount ||
+      !doctorId ||
+      !treatments ||
+      !Array.isArray(treatments)
+    ) {
+      console.log(doctorNotes, billingAmount, doctorId, treatments);
+      throw new Error("Missing required fields");
+    }
+
+    // 1. Update appointment
+    const appointmentResult = await client.query(
+      `UPDATE appointments 
+       SET status = 'completed',
+           doctor_notes = $1
+       WHERE appointment_id = $2 AND doctor_id = $3
+       RETURNING *`,
+      [doctorNotes, id, doctorId]
+    );
+
+    if (appointmentResult.rows.length === 0) {
+      throw new Error("Appointment not found");
+    }
+
+    const appointment = appointmentResult.rows[0];
+
+    // 2. Create treatment history records
+    const treatmentPromises = treatments.map((treatment) =>
+      client.query(
+        `INSERT INTO treatment_history (
+          patient_id,
+          appointment_id,
+          procedure_name,
+          procedure_description,
+          cost
+        ) VALUES ($1, $2, $3, $4, $5)
+        RETURNING *`,
+        [
+          appointment.patient_id,
+          id,
+          treatment.procedureName,
+          treatment.procedureDescription,
+          treatment.cost,
+        ]
+      )
+    );
+
+    const treatmentResults = await Promise.all(treatmentPromises);
+
+    // 3. Create billing record
+    const billingResult = await client.query(
+      `INSERT INTO billing (
+         patient_id,
+         appointment_id,
+         total_amount,
+         payment_status
+       ) VALUES ($1, $2, $3, 'pending')
+       RETURNING *`,
+      [appointment.patient_id, id, billingAmount]
+    );
+
+    // 4. Create notification record
+    const userResult = await client.query(
+      `SELECT user_id FROM patients WHERE patient_id = $1`,
+      [appointment.patient_id]
+    );
+    const user = userResult.rows[0];
+    if (!user) {
+      throw new Error("User not found for patient");
+    }
+
+    await client.query(
+      `INSERT INTO notifications (
+         user_id,
+         message,
+         is_read
+       ) VALUES ($1, $2, false)`,
+      [
+        user.user_id,
+        `Your appointment has been completed. A bill of $${billingAmount} has been generated.`,
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      message: "Appointment completed successfully",
+      data: {
+        appointment: appointmentResult.rows[0],
+        billing: billingResult.rows[0],
+        treatments: treatmentResults.map((result) => result.rows[0]),
+      },
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error completing appointment:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to complete appointment",
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// Patient-side appointment cancellation handler
+app.post("/api/appointments/:appointmentId/cancel", async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const { appointmentId } = req.params;
+    const { cancellationReason } = req.body;
+    console.log(appointmentId);
+    // Validate required fields
+    if (!cancellationReason) {
+      return res.status(400).json({
+        success: false,
+        message: "Cancellation reason is required",
+      });
+    }
+
+    // Check if appointment exists and get relevant details
+    const appointmentResult = await client.query(
+      `SELECT 
+                a.*,
+                p.user_id as patient_user_id,
+                p.fname as patient_first_name,
+                p.lname as patient_last_name,
+                d.first_name as doctor_first_name,
+                d.last_name as doctor_last_name
+            FROM appointments a
+            JOIN patients p ON a.patient_id = p.patient_id
+            JOIN doctors d ON a.doctor_id = d.doctor_id
+            WHERE a.appointment_id = $1 AND a.status != 'canceled'`,
+      [appointmentId]
+    );
+
+    if (appointmentResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found or already cancelled",
+      });
+    }
+
+    const appointment = appointmentResult.rows[0];
+
+    // Update appointment status
+    await client.query(
+      `UPDATE appointments 
+            SET 
+                status = 'canceled',
+                cancellation_reason = $1
+            WHERE appointment_id = $2`,
+      [cancellationReason, appointmentId]
+    );
+
+    // Create notification for patient
+    const notificationMessage = `Your appointment with Dr. ${
+      appointment.doctor_first_name
+    } ${appointment.doctor_last_name} scheduled for ${new Date(
+      appointment.date
+    ).toLocaleDateString()} has been cancelled.\n\nReason: ${cancellationReason}`;
+
+    await client.query(
+      `INSERT INTO notifications 
+            (user_id, message)
+            VALUES ($1, $2)`,
+      [appointment.patient_user_id, notificationMessage]
+    );
+
+    // Commit transaction
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      message: "Appointment cancelled successfully",
+      data: {
+        appointmentId,
+        cancelledAt: new Date(),
+        status: "cancelled",
+      },
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error cancelling appointment:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to cancel appointment",
+      error: error.message,
+    });
+  } finally {
+    client.release();
+  }
+});
+
+
+// Endpoint to get notifications for a specific user
+app.get('/api/notifications/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC',
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'No notifications found' });
+    }
+
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('Error fetching notifications:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Endpoint to mark a specific notification as read
+app.post('/api/notifications/:notificationId/read', async (req, res) => {
+  const { notificationId } = req.params;
+  const { userId } = req.body;
+
+  try {
+    // Verify if the notification exists for the given user and mark it as read
+    const result = await pool.query(
+      'UPDATE notifications SET is_read = TRUE WHERE notification_id = $1 AND user_id = $2 RETURNING *',
+      [notificationId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    res.status(200).json({ message: 'Notification marked as read' });
+  } catch (err) {
+    console.error('Error marking notification as read:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

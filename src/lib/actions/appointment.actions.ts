@@ -72,6 +72,31 @@ export const getRequests = async (request_id: string | undefined) => {
 };
 
 
+export const getRequestsByDoctor = async (doctor_id: string | null) => {
+  try {
+    const response = await axios.get(`http://localhost:5000/api/getrequestbydoctor/${doctor_id}`);
+
+    console.log('Response data:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching appointment:', error);
+    throw error; // Rethrow the error for further handling if needed
+  }
+};
+
+
+export const getRequestsByPatient = async (patient_id: string | null) => {
+  try {
+    const response = await axios.get(`http://localhost:5000/api/getrequestbypatient/${patient_id}`);
+
+    console.log('Response data:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching appointment:', error);
+    throw error; // Rethrow the error for further handling if needed
+  }
+};
+
 
 interface AppointmentCounts {
   scheduledCount: number;

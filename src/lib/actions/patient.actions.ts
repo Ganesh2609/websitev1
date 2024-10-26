@@ -57,13 +57,11 @@ export const getUser = async (user_id: string) => {
     });
 
     if (!response.ok) {
-      console.log(response, "response");
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to fetch user data");
     }
 
     const userData = await response.json(); // Parse the user data from response
-    console.log(userData, "userData");
     return userData;
   } catch (error) {
     console.error("Error fetching user data:", error);
@@ -83,13 +81,11 @@ export const getPatient = async (patient_id: string | undefined) => {
     });
 
     if (!response.ok) {
-      console.log(response, "response");
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to fetch patient data");
     }
 
     const patientData = await response.json(); // Parse the patient data from response
-    console.log(patientData, "patient Data");
     return patientData;
   } catch (error) {
     console.error("Error fetching patient data:", error);
@@ -98,7 +94,6 @@ export const getPatient = async (patient_id: string | undefined) => {
 };
 
 export const getDoctor = async (doctor_id: string | undefined) => {
-  console.log(doctor_id, "doctorId"); 
   try {
     // Append userId as a query parameter in the URL
     const response = await fetch(`http://localhost:5000/api/getDoctor?doctor_id=${doctor_id}`, {
@@ -109,13 +104,11 @@ export const getDoctor = async (doctor_id: string | undefined) => {
     });
 
     if (!response.ok) {
-      console.log(response, "response");
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to fetch doctor data");
     }
 
     const doctorData = await response.json(); // Parse the doctor data from response
-    console.log(doctorData, "doctor Data");
     return doctorData;
   } catch (error) {
     console.error("Error fetching doctor data:", error);
@@ -135,7 +128,6 @@ export const getRequestDate = async (request_id: string | undefined) => {
     });
 
     if (!response.ok) {
-      console.log(response, "response");
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to fetch preferred date");
     }
@@ -159,13 +151,11 @@ export const getRequestStartTime = async (slot_id: string | undefined) => {
     });
 
     if (!response.ok) {
-      console.log(response, "response");
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to fetch start time");
     }
 
     const startTime = await response.json(); // Parse the start time from response
-    console.log(startTime, "start time");
     return startTime;
   } catch (error) {
     console.error("Error fetching start time:", error);

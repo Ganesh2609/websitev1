@@ -41,21 +41,37 @@ export interface Patient {
   disclosureConsent: boolean;
 }
 
+// export interface Appointment {
+//   appointment_id: string;
+//   doctor_id: string;
+//   patient_id: string;
+//   slot_id: string;
+//   request_id: string;
+//   status: Status;
+//   reason: string;
+//   doctor_notes: string;
+//   patient_feedback: string;
+//   doctorFirstName: string;
+//   doctorLastName: string;
+//   patientFirstName: string;
+//   patientLastName: string;
+//   date: string;
+//   time: {
+//     start_time: string;};
+// }
+
 export interface Appointment {
   appointment_id: string;
-  doctor_id: string;
-  patient_id: string;
-  slot_id: string;
-  request_id: string;
+  patient_first_name: string;
+  patient_last_name: string;
+  doctor_first_name: string;
+  doctor_last_name: string;
+  reason: string;
+  date: string;
+  start_time: string;
   status: Status;
   doctor_notes: string;
   patient_feedback: string;
-  doctorFirstName: string;
-  doctorLastName: string;
-  patientFirstName: string;
-  patientLastName: string;
-  date: string;
-  time: string;
 }
 
 export interface AppointmentsState {

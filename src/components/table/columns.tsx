@@ -5,7 +5,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Doctors } from "@/constants";
 import { Appointment } from "@/types/types";
 
-// import { AppointmentModal } from "@/components/AppointmentModal";
+import { AppointmentModal } from "@/components/AppointmentModal";
 import { StatusBadge } from "@/components/StatusBadge";
 
 export const columns: ColumnDef<Appointment>[] = [

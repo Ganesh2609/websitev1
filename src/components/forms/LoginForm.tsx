@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
+// import jwt from 'jsonwebtoken';
 
 import { Form } from "@/components/ui/form";
 import { loginUser } from "@/lib/actions/patient.actions";
@@ -10,7 +11,7 @@ import { LoginFormValidation } from "@/lib/validation";
 
 import "react-phone-number-input/style.css";
 import CustomFormField, { FormFieldType } from "../CustomFormField";
-import SubmitButton from "../SubmitButton";
+import SubmitButton from "@/components/SubmitButton";
 
 import {
   Modal,
@@ -56,29 +57,34 @@ export const LoginForm = () => {
         username: values.username,
         password: values.password,
       });
-
-      if (loginData && loginData.token) {
-        localStorage.setItem('authToken', loginData.token);
-        
-        // Use the user information from the login response
-        const { role, user_id } = loginData.user;
-
-        // Navigate based on user role
-        if (role === "admin") {
-          onOpen(); // Open passkey verification for admin
-        } else if (role === "doctor") {
-          navigate(`/doctor/${user_id}/home`);
-        } else {
-          navigate(`/patients/${user_id}/home`);
-        }
+      console.log("loginData", loginData);
+      // If the login was successful, the server will return a user_id and a role.
+      // We check if these values are present in the response before proceeding.
+      if (loginData.user.user_id && loginData.user.role) {
+        console.log("loginData", loginData.user.user_id, loginData.user.role);
+        localStorage.setItem("userId", loginData.user.user_id);
+        localStorage.setItem("doctor_id", loginData.user.doctorId);
+        localStorage.setItem("patient_id", loginData.user.patientId);
+        localStorage.setItem("role", loginData.user.role);
+        handleNavigation(loginData.user.role, loginData.user.user_id); // Navigate based on the role
       } else {
-        setLoginError("Invalid username or password");
+        setLoginError("Invalid username or password.");
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Login failed:", error);
       setLoginError("An error occurred during login.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleNavigation = (role: string, user_id: string) => {
+    if (role === "admin") {
+      onOpen(); // Admin-specific modal
+    } else if (role === "doctor") {
+      navigate(`/doctors/${user_id}/home`);
+    } else {
+      navigate(`/patients/${user_id}/home`);
     }
   };
 

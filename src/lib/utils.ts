@@ -85,3 +85,38 @@ export const getAuthHeader = () => {
   const token = localStorage.getItem("authToken");
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
+
+
+
+export function getProperDate(dateString: string) {
+  const dateOptions = {
+    weekday: "short",
+    // year: "numeric",
+    month: "short",
+    day: "numeric",
+  }as const;
+
+  const dateTimeOptions = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  } as const;
+
+  const formattedDateTime: string = new Date(dateString).toLocaleString(
+    "en-US",
+    dateTimeOptions
+  );
+
+  const formattedDate: string = new Date(dateString).toLocaleString(
+    "en-US",
+    dateOptions
+  );
+
+  return {
+    dateTime: formattedDateTime,
+    dateOnly: formattedDate,
+  };
+}
