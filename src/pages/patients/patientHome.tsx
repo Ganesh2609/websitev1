@@ -29,24 +29,23 @@ import appointmentsImg from "@/assets/icons/appointments.svg";
 import pendingImg from "@/assets/icons/pending.svg";
 import cancelledImg from "@/assets/icons/cancelled.svg";
 
-import {AppointmentsState } from "@/types/types";
+import { AppointmentsState } from "@/types/types";
 import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 
-
-import {
-  getRequestsByPatient,
-} from "@/lib/actions/appointment.actions";
+import { getRequestsByPatient } from "@/lib/actions/appointment.actions";
 import { DataTable } from "@/pages/doctors/DocDataTable";
 import { columns } from "@/pages/patients/appointmentCol";
 
 import { cn, getProperDate } from "@/lib/utils";
-import {BentoGridItem } from "@/components/aceternity/bento-grid";
+import { BentoGridItem, BentoGrid } from "@/components/aceternity/bento-grid";
 import {
-
   IconFileBroken,
-
   IconTableColumn,
+  IconUsersGroup,
+  IconManFilled,
+  IconDentalBroken,
+  IconEarScan,
 } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import {
@@ -55,6 +54,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+import { NCard, NCardBody } from "@nextui-org/react";
+
+import { Tabs, Tab, Chip } from "@nextui-org/react";
 
 const PatientHome = () => {
   const [appointments, setAppointments] = useState<AppointmentsState>({
@@ -65,6 +68,7 @@ const PatientHome = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [doctype, setdoctype] = useState<string>("general");
 
   useEffect(() => {
     const patientId = localStorage.getItem("patient_id");
@@ -138,7 +142,7 @@ const PatientHome = () => {
                     alt="appointments"
                     className="size-8 w-fit"
                   />
-                  <h2 className="text-32-bold text-white">{'-'}</h2>
+                  <h2 className="text-32-bold text-white">{"-"}</h2>
                 </div>
                 <h2 className="text-left text-balance text-base md:text-xl lg:text-2xl font-semibold tracking-[-0.015em] text-white">
                   Scheduled appointments
@@ -172,7 +176,7 @@ const PatientHome = () => {
                     alt="appointments"
                     className="size-8 w-fit"
                   />
-                  <h2 className="text-32-bold text-white">{'-'}</h2>
+                  <h2 className="text-32-bold text-white">{"-"}</h2>
                 </div>
                 <h2 className="max-w-sm md:max-w-lg  text-left  text-base md:text-xl lg:text-2xl font-semibold tracking-[-0.015em] text-white">
                   Cancelled appointments
@@ -181,40 +185,114 @@ const PatientHome = () => {
             </WobbleCard>
           </div>
 
-          <div className="flex flex-1 flex-row gap-4 p-4">
-            <div
-              className={cn(
-                "rounded-xl hover:shadow-xl transition max-h-[350px] duration-200 shadow-input dark:shadow-none p-4 dark:bg-black dark:border-white/[0.2] bg-white border border-transparent justify-between space-y-4 max-w-[1200px]  "
-              )}
-            >
-              <div className="group-hover/bento:translate-x-2 transition duration-200">
-                {<IconFileBroken className="h-4 w-4 text-neutral-500" />}
-                <div className="font-sans font-bold text-neutral-600 dark:text-neutral-200 mb-2 mt-2">
-                  {"Upcoming Appionments"}
+          <BentoGrid>
+            {/* <div
+                className={cn(
+                  "rounded-xl hover:shadow-xl transition max-h-[350px] duration-200 shadow-input dark:shadow-none p-4 dark:bg-black dark:border-white/[0.2] bg-white border border-transparent justify-between space-y-4 min-w-[940px]  "
+                )}
+              >
+                <div className="group-hover/bento:translate-x-2 transition duration-200">
+                  {<IconFileBroken className="h-4 w-4 text-neutral-500" />}
+                  <div className="font-sans font-bold text-neutral-600 dark:text-neutral-200 mb-2 mt-2">
+                    {"Upcoming Appionments"}
+                  </div>
+                  <div className="font-sans font-normal text-neutral-600 text-xs dark:text-neutral-300">
+                    <span className="text-sm"></span>
+                  </div>
                 </div>
-                <div className="font-sans font-normal text-neutral-600 text-xs dark:text-neutral-300">
-                  <span className="text-sm"></span>
+                {
+                  
+                }
+              </div> */}
+            <BentoGridItem
+              key={0}
+              title={
+                <h2 className="text-2xl text-white">Book Appionment Now</h2>
+              }
+              description={
+                <div className="flex flex-col">
+                  <Tabs
+                    aria-label="Options"
+                    color="primary"
+                    variant="underlined"
+                    classNames={{
+                      tabList:
+                        "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+                      cursor: "w-full bg-[#22d3ee]",
+                      tab: "max-w-fit px-0 h-12",
+                      tabContent: "group-data-[selected=true]:text-[#06b6d4]",
+                    }}
+                    onSelectionChange={(key) => setdoctype(key.toString())}
+                  >
+                    <Tab
+                      key="general"
+                      title={
+                        <div className="flex items-center space-x-2">
+                          <IconUsersGroup />
+                          <span>General</span>
+                          {/* <Chip size="sm" variant="faded">
+                            9
+                          </Chip> */}
+                        </div>
+                      }
+                    />
+                    <Tab
+                      key="pediatric"
+                      title={
+                        <div className="flex items-center space-x-2">
+                          <IconManFilled />
+                          <span>Pediatric</span>
+                        </div>
+                      }
+                    />
+                    <Tab
+                      key="dentist"
+                      title={
+                        <div className="flex items-center space-x-2">
+                          <IconDentalBroken />
+                          <span>Dentist</span>
+                        </div>
+                      }
+                    />
+                    <Tab
+                      key="ent"
+                      title={
+                        <div className="flex items-center space-x-2">
+                          <IconEarScan />
+                          <span>ENT Specialist</span>
+                        </div>
+                      }
+                    />
+                  </Tabs>
                 </div>
-              </div>
-              {
+              }
+              header={<SkeletonTwo docType={doctype} />}
+              className={cn("[&>p:text-lg]", "col-span-7")}
+              // icon={<IconFileBroken className="h-4 w-4 text-neutral-500" />}
+            />
+
+            <BentoGridItem
+              key={1}
+              title={"Upcoming Appionments"}
+              description={<span className="text-sm"></span>}
+              header={
                 <DataTable
                   columns={columns}
                   data={appointments.appointments}
                 ></DataTable>
               }
-            </div>
+              className={cn("[&>p:text-lg]", "md:col-span-8", "max-h-[360px]")}
+              icon={<IconFileBroken className="h-4 w-4 text-neutral-500" />}
+            />
             <BentoGridItem
-              key={1}
+              key={2}
               title={"Appionment Requests"}
               description={<span className="text-sm"></span>}
               header={<SkeletonFour />}
-              className={cn(
-                "[&>p:text-lg]",
-                "md:col-span-4 min-w-[540px] max-h-[350px] max-w-sm"
-              )}
+              className={cn("[&>p:text-lg]", "md:col-span-4 ", "max-h-[360px]")}
               icon={<IconTableColumn className="h-4 w-4 text-neutral-500" />}
             />
-          </div>
+          </BentoGrid>
           <NotificationsModal userId={localStorage.getItem("userId")} />
         </div>
 
@@ -227,7 +305,8 @@ const PatientHome = () => {
 
 export default PatientHome;
 
-const SkeletonTwo = () => {
+
+const SkeletonTwo = ({ docType }: { docType: string }) => {
   const variants = {
     initial: {
       width: 0,
@@ -246,17 +325,21 @@ const SkeletonTwo = () => {
     },
   };
   const arr = new Array(6).fill(0);
+
   return (
     <motion.div
       initial="initial"
       animate="animate"
       whileHover="hover"
-      className="flex flex-1 w-full h-full min-h-[6rem] dark:bg-dot-white/[0.2] bg-dot-black/[0.2] flex-col space-y-2"
+      className={`flex flex-1 w-full h-full min-h-[6rem] dark:bg-dot-white/[0.2] bg-dot-black/[0.2] flex-col space-y-2`}
     >
-      {/* <DataTable columns={columns} data={appointments} /> */}
+
+      <p>{docType}</p>
     </motion.div>
   );
 };
+
+
 
 type Request = {
   request_id: string;
@@ -303,7 +386,7 @@ const SkeletonFour = () => {
     try {
       const data = await getRequestsByPatient(patientId);
       if (Array.isArray(data) && data.length > 0) {
-        const newData = data.slice(0, 3);
+        const newData = data.slice(0, 2);
         // Only update if data has changed
         setRequests((prev) => {
           const hasChanged = newData.some(
