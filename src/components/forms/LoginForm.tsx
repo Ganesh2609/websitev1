@@ -60,7 +60,7 @@ export const LoginForm = () => {
       console.log("loginData", loginData);
       // If the login was successful, the server will return a user_id and a role.
       // We check if these values are present in the response before proceeding.
-      if (loginData.user.user_id && loginData.user.role) {
+      if ('user' in loginData) {
         console.log("loginData", loginData.user.user_id, loginData.user.role);
         localStorage.setItem("userId", loginData.user.user_id);
         localStorage.setItem("doctor_id", loginData.user.doctorId);

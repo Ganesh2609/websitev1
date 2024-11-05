@@ -100,7 +100,7 @@ export type Doctor = {
   specialization: string;
   license_number: string;  
   status: string;
-  
+  years_of_experience: number;
 }
 export type CreateAppointmentParams = {
     userId: string;
