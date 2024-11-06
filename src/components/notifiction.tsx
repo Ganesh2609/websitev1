@@ -47,7 +47,7 @@ const Button = ({
   );
 };
 
-const NotificationsModal = ({ userId }: { userId: string }) => {
+const NotificationsModal = ({ userId }: { userId: string | null }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

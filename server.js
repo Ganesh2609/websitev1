@@ -449,7 +449,7 @@ app.get("/api/doctors/active", async (req, res) => {
     console.log("result.rows");
     // Define the SQL query to get all active doctors
     const query = `
-      SELECT doctor_id, first_name, last_name 
+      SELECT  doctor_id, user_id, first_name, last_name, years_of_experience
       FROM doctors
       WHERE status = 'active';
     `;

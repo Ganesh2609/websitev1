@@ -94,3 +94,10 @@ export const StatusIcon = {
   cancelled: "@/assets/icons/cancelled.svg",
 };
 
+export const getDoctorIcon = (firstName: string, lastName: string) => {
+  const doctor = Doctors.find(
+    (doc) => `${doc.name}` === `${firstName} ${lastName}`
+  );
+  return doctor ? doctor.image : null;
+};
+

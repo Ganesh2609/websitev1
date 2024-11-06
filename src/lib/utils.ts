@@ -120,3 +120,4 @@ export function getProperDate(dateString: string) {
     dateOnly: formattedDate,
   };
 }
+
