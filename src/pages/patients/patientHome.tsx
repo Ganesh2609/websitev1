@@ -142,7 +142,7 @@ const PatientHome = () => {
                     alt="appointments"
                     className="size-8 w-fit"
                   />
-                  <h2 className="text-32-bold text-white">{"-"}</h2>
+                  <h2 className="text-32-bold text-white">{appointments.scheduledCount}</h2>
                 </div>
                 <h2 className="text-left text-balance text-base md:text-xl lg:text-2xl font-semibold tracking-[-0.015em] text-white">
                   Scheduled appointments
@@ -159,7 +159,7 @@ const PatientHome = () => {
                     className="size-8 w-fit"
                   />
 
-                  <h2 className="text-32-bold text-white">{"-"}</h2>
+                  <h2 className="text-32-bold text-white">{appointments.pendingCount}</h2>
                 </div>
 
                 <h2 className="max-w-sm  text-left text-balance text-base md:text-xl lg:text-2xl font-semibold tracking-[-0.015em] text-white">
@@ -176,7 +176,7 @@ const PatientHome = () => {
                     alt="appointments"
                     className="size-8 w-fit"
                   />
-                  <h2 className="text-32-bold text-white">{"-"}</h2>
+                  <h2 className="text-32-bold text-white">{appointments.cancelledCount}</h2>
                 </div>
                 <h2 className="max-w-sm md:max-w-lg  text-left  text-base md:text-xl lg:text-2xl font-semibold tracking-[-0.015em] text-white">
                   Cancelled appointments
@@ -305,40 +305,190 @@ const PatientHome = () => {
 
 export default PatientHome;
 
+import { Select, SelectItem, DatePicker, Button } from "@nextui-org/react";
+import { IconStethoscope, IconSearch } from "@tabler/icons-react";
+import { CheckboxGroup } from "@nextui-org/react";
+import { CustomCheckbox } from "@/pages/patients/DoctorCard";
+import { Doctors, getDoctorIcon } from "@/constants/index";
+import { Doctor } from "@/types/types";
+
+interface SpecializationData {
+  [key: string]: { key: string; label: string }[];
+}
 
 const SkeletonTwo = ({ docType }: { docType: string }) => {
-  const variants = {
-    initial: {
-      width: 0,
-    },
-    animate: {
-      width: "100%",
-      transition: {
-        duration: 0.2,
-      },
-    },
-    hover: {
-      width: ["0%", "100%"],
-      transition: {
-        duration: 2,
-      },
-    },
+  const [groupSelected, setGroupSelected] = useState<string[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  
+  const specializationsData: SpecializationData = {
+    dentist: [
+      { key: "general-dentist", label: "General Dentist" },
+      { key: "orthodontist", label: "Orthodontist" },
+      { key: "pediatric-dentist", label: "Pediatric Dentist" },
+      { key: "periodontist", label: "Periodontist" },
+      { key: "cosmetic-dentist", label: "Cosmetic Dentist" },
+      { key: "oral-surgeon", label: "Oral Surgeon" },
+      { key: "prosthodontist", label: "Prosthodontist" },
+    ],
+    general: [
+      { key: "family-medicine", label: "Family Medicine" },
+      { key: "internal-medicine", label: "Internal Medicine" },
+      { key: "geriatric-medicine", label: "Geriatric Medicine" },
+      { key: "sports-medicine", label: "Sports Medicine" },
+      { key: "preventive-medicine", label: "Preventive Medicine" },
+      { key: "emergency-medicine", label: "Emergency Medicine" },
+      { key: "hospitalist", label: "Hospitalist" },
+    ],
+    pediatric: [
+      { key: "pediatric-cardiology", label: "Pediatric Cardiology" },
+      { key: "pediatric-neurology", label: "Pediatric Neurology" },
+      { key: "pediatric-oncology", label: "Pediatric Oncology" },
+      { key: "pediatric-endocrinology", label: "Pediatric Endocrinology" },
+      { key: "pediatric-gastroenterology", label: "Pediatric Gastroenterology" },
+      { key: "neonatology", label: "Neonatology" },
+      { key: "pediatric-pulmonology", label: "Pediatric Pulmonology" },
+    ],
+    ent: [
+      { key: "otolaryngology", label: "Otolaryngology" },
+      { key: "rhinology", label: "Rhinology" },
+      { key: "laryngology", label: "Laryngology" },
+      { key: "neurotology", label: "Neurotology" },
+      { key: "pediatric-ent", label: "Pediatric ENT" },
+      { key: "skull-base-surgery", label: "Skull Base Surgery" },
+      { key: "facial-plastic-surgery", label: "Facial Plastic Surgery" },
+    ],
   };
-  const arr = new Array(6).fill(0);
+
+  const specializations = specializationsData[docType] || [];
+
+  useEffect(() => {
+    fetchDoctors();
+  }, []);
+
+  const fetchDoctors = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/doctors/active");
+      setDoctors(response.data.doctors);
+    } catch (error) {
+      console.error("Error fetching active doctors:", error);
+    }
+  };
 
   return (
-    <motion.div
-      initial="initial"
-      animate="animate"
-      whileHover="hover"
-      className={`flex flex-1 w-full h-full min-h-[6rem] dark:bg-dot-white/[0.2] bg-dot-black/[0.2] flex-col space-y-2`}
-    >
+    <Modal>
+      <motion.div
+        initial="initial"
+        animate="animate"
+        whileHover="hover"
+        className="w-full h-full min-h-[6rem] dark:bg-dot-white/[0.2] bg-dot-black/[0.2]"
+      >
+        <div className="flex w-full h-full flex-row gap-5 mt-3">
+          <Select
+            variant="bordered"
+            label={<h2 className="text-xl mb-0.5 text-white">Specialist</h2>}
+            placeholder="Select a Specialist"
+            className="bg-black bg-opacity-50 mt-0"
+            size="lg"
+            startContent={<IconStethoscope />}
+          >
+            {specializations.map((specialization) => (
+              <SelectItem key={specialization.key} value={specialization.key}>
+                {specialization.label}
+              </SelectItem>
+            ))}
+          </Select>
 
-      <p>{docType}</p>
-    </motion.div>
+          <DatePicker
+            label={<h2 className="text-lg text-white">Appointment Date</h2>}
+            size="lg"
+            variant="bordered"
+            className="bg-black bg-opacity-50"
+          />
+
+          <div className="relative">
+            <Button
+              color="success"
+              endContent={<IconSearch />}
+              className="group-hover/modal-btn min-w-[170px] mt-5"
+            >
+              <h4 className="text-18-bold text-black">Search</h4>
+            </Button>
+
+            <ModalTrigger className="absolute inset-0 max-h-[40px] mt-5 bg-transparent cursor-pointer z-10">
+              <div></div>
+            </ModalTrigger>
+          </div>
+        </div>
+      </motion.div>
+
+      <ModalBody>
+        <ModalContent className="min-w-[900px]">
+          <h4 className="text-lg md:text-2xl text-neutral-600 dark:text-neutral-100 font-bold mb-8">
+            Book your Appointment now!
+          </h4>
+
+          <div className="flex flex-col gap-1 w-full">
+            <CheckboxGroup
+              label="Select Doctor"
+              value={groupSelected}
+              onChange={setGroupSelected}
+              color="success"
+              orientation="horizontal"
+              classNames={{
+                base: "w-full",
+              
+              }}
+            >
+              {doctors.map((doctor) => {
+                const doctorIcon = getDoctorIcon(doctor.first_name, doctor.last_name);
+                const doctorName = `${doctor.first_name} ${doctor.last_name}`;
+                return (
+                  <CustomCheckbox
+                    key={doctor.doctor_id}
+                    value={doctor.doctor_id}
+                    user={{
+                      name: doctorName,
+                      avatar: doctorIcon as string,
+                      username: '',
+                      url: "#",
+                      role: "Experience: "+ doctor.years_of_experience.toString() + " Years",
+                      status: doctor.status || "Active",
+                    }}
+                    statusColor="success"
+                  />
+                );
+              })}
+            </CheckboxGroup>
+            
+            {groupSelected.length > 0 && (
+              <div className="mt-4 ml-1 text-default-500">
+                <p>Selected Doctors:</p>
+                <ul className="list-disc ml-6">
+                  {groupSelected.map((doctorId) => {
+                    const doctor = doctors.find(d => d.doctor_id === doctorId);
+                    return doctor && (
+                      <li key={doctorId}>
+                        Dr. {doctor.first_name} {doctor.last_name} - {doctor.doctor_id}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </div>
+        </ModalContent>
+        <ModalFooter className="gap-4">
+          <button className="px-2 py-1 bg-gray-200 text-black dark:bg-black dark:border-black dark:text-white border border-gray-300 rounded-md text-sm w-28">
+            Cancel
+          </button>
+          <button className="bg-black text-white dark:bg-white dark:text-black text-sm px-2 py-1 rounded-md border border-black w-28">
+            Book Now
+          </button>
+        </ModalFooter>
+      </ModalBody>
+    </Modal>
   );
 };
-
 
 
 type Request = {
@@ -360,6 +510,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import NotificationsModal from "@/components/notifiction";
+import axios from "axios";
 
 const SkeletonFour = () => {
   const [requests, setRequests] = useState<Request[]>([]);
@@ -595,32 +746,6 @@ const SkeletonFour = () => {
                     </Card>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <ModalTrigger className="bg-black dark:bg-white dark:text-black text-white flex justify-center group/modal-btn">
-                      {/* <button className="bg-slate-800 no-underline group cursor-pointer relative shadow-2xl shadow-zinc-900 rounded-full p-px text-xs font-semibold leading-6  text-white inline-block">
-                        <span className="absolute inset-0 overflow-hidden rounded-full">
-                          <span className="absolute inset-0 rounded-full bg-[image:radial-gradient(75%_100%_at_50%_0%,rgba(56,189,248,0.6)_0%,rgba(56,189,248,0)_75%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
-                        </span>
-                        <div className="relative flex items-center z-10 rounded-full bg-zinc-950  px-4 ring-1 ring-white/10 ">
-                          <span>{`Open`}</span>
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              stroke="currentColor"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="1.5"
-                              d="M10.75 8.75L14.25 12L10.75 15.25"
-                            ></path>
-                          </svg>
-                        </div>
-                        <span className="absolute -bottom-0 left-[1.125rem] h-px w-[calc(100%-2.25rem)] bg-gradient-to-r from-emerald-400/0 via-emerald-400/90 to-emerald-400/0 transition-opacity duration-500 group-hover:opacity-40"></span>
-                      </button> */}
-                    </ModalTrigger>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -733,14 +858,3 @@ const SkeletonFour = () => {
     </motion.div>
   );
 };
-
-const items = [
-  {
-    title: "Appionment Requests",
-    description: <span className="text-sm"></span>,
-    header: <SkeletonFour />,
-    className: "md:col-span-4 min-w-[400px]",
-    icon: <IconTableColumn className="h-4 w-4 text-neutral-500" />,
-    child: <div></div>,
-  },
-];

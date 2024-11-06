@@ -222,3 +222,6 @@ export const registerPatient = async (patient: Patient) => {
   }
 };
 
+
+
+
