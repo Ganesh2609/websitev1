@@ -142,7 +142,7 @@ const PatientHome = () => {
                     alt="appointments"
                     className="size-8 w-fit"
                   />
-                  <h2 className="text-32-bold text-white">{"-"}</h2>
+                  <h2 className="text-32-bold text-white">{appointments.scheduledCount}</h2>
                 </div>
                 <h2 className="text-left text-balance text-base md:text-xl lg:text-2xl font-semibold tracking-[-0.015em] text-white">
                   Scheduled appointments
@@ -159,7 +159,7 @@ const PatientHome = () => {
                     className="size-8 w-fit"
                   />
 
-                  <h2 className="text-32-bold text-white">{"-"}</h2>
+                  <h2 className="text-32-bold text-white">{appointments.pendingCount}</h2>
                 </div>
 
                 <h2 className="max-w-sm  text-left text-balance text-base md:text-xl lg:text-2xl font-semibold tracking-[-0.015em] text-white">
@@ -176,7 +176,7 @@ const PatientHome = () => {
                     alt="appointments"
                     className="size-8 w-fit"
                   />
-                  <h2 className="text-32-bold text-white">{"-"}</h2>
+                  <h2 className="text-32-bold text-white">{appointments.cancelledCount}</h2>
                 </div>
                 <h2 className="max-w-sm md:max-w-lg  text-left  text-base md:text-xl lg:text-2xl font-semibold tracking-[-0.015em] text-white">
                   Cancelled appointments

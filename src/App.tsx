@@ -7,7 +7,9 @@ import { AuthPage } from "@/pages/AuthPage";
 import Register from "@/pages/patients/Register";
 import NewAppointment from "@/pages/patients/NewAppointment";
 import RequestSuccess from "./pages/patients/success";
-import AdminPage from "./pages/admin/home";
+import ManageDoctor from "./pages/admin/ManageDoctor";
+import ManageNurse from "./pages/admin/ManageNurse";
+import ManageSpecialization from "./pages/admin/ManageSpecialization";
 import DoctorHome from "./pages/doctors/DoctorHome";
 import PatientHome from "./pages/patients/patientHome";
 
@@ -19,7 +21,9 @@ function App() {
         <Routes>
           {/* <Route path="/" element={} /> */}
           <Route path="/Auth" element={<AuthPage />} />
-          <Route path="/admin/home" element={<AdminPage />} />
+          <Route path="/admin/doctor" element={<ManageDoctor />} />
+          <Route path="/admin/nurse" element={<ManageNurse />} />
+          <Route path="/admin/specialization" element={<ManageSpecialization />} />
           <Route path="/doctors/:user_id/home" element={<DoctorHome />} />
           <Route path="/patients/:user_id/home" element={<PatientHome />} />
           <Route path="/patients/:user_id/register" element={<Register />} />
