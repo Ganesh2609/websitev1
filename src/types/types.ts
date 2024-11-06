@@ -101,7 +101,9 @@ export type Doctor = {
   license_number: string;  
   status: string;
   years_of_experience: number;
-  
+  specialization_id: string;
+  specialization_name: string;
+  medical_field: string;
 }
 export type CreateAppointmentParams = {
     userId: string;
