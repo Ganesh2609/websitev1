@@ -33,7 +33,10 @@ import { AppointmentsState } from "@/types/types";
 import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 
-import { createAppointment, getRequestsByPatient } from "@/lib/actions/appointment.actions";
+import {
+  createAppointment,
+  getRequestsByPatient,
+} from "@/lib/actions/appointment.actions";
 import { DataTable } from "@/pages/doctors/DocDataTable";
 import { columns } from "@/pages/patients/appointmentCol";
 
@@ -338,9 +341,7 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
   const [selectedDate, setSelectedDate] = useState<DateValue>(
     parseDate("2024-04-04")
   );
-  const [selectedTime, setSelectedTime] = useState<string | undefined>(
-    undefined
-  );
+
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [timeSlots, setTimeSlots] = useState<any[]>([]); // Array of time slots
@@ -457,9 +458,8 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
     console.log(e.target.value);
     setSelectedDoctor(e.target.value);
     console.log(selectedDate);
-    console.log(
-      fetchAvailableSlots("60ec647b-7bd7-42c2-add9-0ff3843726dc", selectedDate)
-    );
+    console.log("selectedDoctor", selectedDoctor);
+    fetchAvailableSlots(e.target.value, selectedDate);
   };
 
   const generateTimeSlots = (availableSlots: any[]) => {
@@ -506,11 +506,10 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
     }
   };
 
-
   const handleBookAppointment = async () => {
     try {
       const appointmentData = {
-        userId: localStorage.getItem("user_id"),
+        userId: localStorage.getItem("userId"),
         patient: localStorage.getItem("patient_id"),
         primaryPhysician: selectedDoctor,
         schedule: selectedDate,
@@ -523,7 +522,7 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
       // Handle success, such as showing a success message or redirecting the user
     } catch (error) {
       // Handle error, such as displaying an error message to the user
-      console.error('Error creating appointment:', error);
+      console.error("Error creating appointment:", error);
     }
   };
 
@@ -598,7 +597,10 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
               renderValue={(items: SelectedItems<Doctor>) => {
                 return items.map((doctor) =>
                   doctor.data ? (
-                    <div key={doctor.key} className="flex items-center gap-2">
+                    <div
+                      key={doctor.data.doctor_id}
+                      className="flex items-center gap-2"
+                    >
                       <Avatar
                         alt={`${doctor.data.first_name} ${doctor.data.last_name}`}
                         className="flex-shrink-0"
@@ -671,8 +673,10 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
           <button className="px-2 py-1 bg-gray-200 text-black dark:bg-black dark:border-black dark:text-white border border-gray-300 rounded-md text-sm w-28">
             Cancel
           </button>
-          <button className="bg-black text-white dark:bg-white dark:text-black text-sm px-2 py-1 rounded-md border border-black w-28"
-          onClick={handleBookAppointment}>
+          <button
+            className="bg-black text-white dark:bg-white dark:text-black text-sm px-2 py-1 rounded-md border border-black w-28"
+            onClick={handleBookAppointment}
+          >
             Book Now
           </button>
         </ModalFooter>
@@ -736,7 +740,7 @@ const SkeletonFour = () => {
           );
           return hasChanged ? newData : prev;
         });
-        // console.log("newData", newData);
+        console.log("newData", data);
       } else {
         setError("No requests found");
         setRequests([]);
@@ -952,7 +956,7 @@ const SkeletonFour = () => {
                 </h4>
                 <div className="py-6 flex justify-center items-center">
                   <motion.div
-                    key={"images"}
+                    key={request.request_id}
                     style={{
                       rotate: 0,
                     }}

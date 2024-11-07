@@ -387,9 +387,12 @@ app.post("/api/patients/new-appointments/getDates", async (req, res) => {
   }
 
   try {
-    console.log('getDate',doctor_id, date);
+    console.log("getDate", doctor_id, date);
     // Convert the date to 'YYYY-MM-DD' format without timezone issues
-    const formattedDate = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
+    const formattedDate = `${date.year}-${String(date.month).padStart(
+      2,
+      "0"
+    )}-${String(date.day).padStart(2, "0")}`;
     console.log(formattedDate);
 
     // Open a new client connection from the pool
@@ -472,16 +475,12 @@ app.get("/api/doctors/active", async (req, res) => {
 });
 
 app.post("/api/appointments", async (req, res) => {
-  const {
-    userId,
-    patient,
-    preferredDoctorId,
-    preferredDate,
-    slotId,
-    reason,
-  } = req.body;
-  const formattedDate = `${preferredDate.year}-${String(preferredDate.month).padStart(2, '0')}-${String(preferredDate.day).padStart(2, '0')}`;
-
+  const { userId, patient, preferredDoctorId, preferredDate, slotId, reason } =
+    req.body;
+  const formattedDate = `${preferredDate.year}-${String(
+    preferredDate.month
+  ).padStart(2, "0")}-${String(preferredDate.day).padStart(2, "0")}`;
+  console.log("preferred_doctor_id", preferredDoctorId);
   try {
     const result = await pool.query(
       `INSERT INTO appointment_requests (
@@ -496,6 +495,31 @@ app.post("/api/appointments", async (req, res) => {
     );
 
     const newAppointment = result.rows[0]; // Get the newly created appointment
+
+    // Send notification to the patient
+    await pool.query(
+      `INSERT INTO notifications (user_id, message, is_read)
+       VALUES ($1, $2, $3)`,
+      [userId, `Your appointment request has been submitted.`, false]
+    );
+
+    // Send notification to the doctor
+    const { rows: doctor } = await pool.query(
+      `SELECT user_id FROM doctors WHERE doctor_id = $1`,
+      [preferredDoctorId]
+    );
+
+    console.log(doctor);
+    await pool.query(
+      `INSERT INTO notifications (user_id, message, is_read)
+       VALUES ($1, $2, $3)`,
+      [
+        doctor[0].user_id,
+        `A new appointment request has been submitted for you.`,
+        false,
+      ]
+    );
+
     console.log(newAppointment);
     res.status(201).json(newAppointment); // Send the new appointment data back as a response
   } catch (error) {
@@ -1301,11 +1325,27 @@ app.delete("/api/deleteNurse/:nurseId", async (req, res) => {
   }
 });
 
-app.post('/api/addNurse', async (req, res) => {
-  const { username, firstName, lastName, phone, email, licenseNumber, assignedDoctor } = req.body;
+app.post("/api/addNurse", async (req, res) => {
+  const {
+    username,
+    firstName,
+    lastName,
+    phone,
+    email,
+    licenseNumber,
+    assignedDoctor,
+  } = req.body;
 
-  if (!username || !firstName || !lastName || !phone || !email || !licenseNumber || !assignedDoctor) {
-    return res.status(400).json({ message: 'All fields are required.' });
+  if (
+    !username ||
+    !firstName ||
+    !lastName ||
+    !phone ||
+    !email ||
+    !licenseNumber ||
+    !assignedDoctor
+  ) {
+    return res.status(400).json({ message: "All fields are required." });
   }
 
   try {
@@ -1328,7 +1368,14 @@ app.post('/api/addNurse', async (req, res) => {
       INSERT INTO nurses (user_id, doctor_id, first_name, last_name, license_number, status)
       VALUES ($1, $2, $3, $4, $5, $6) RETURNING nurse_ID
     `;
-    const values2 = [userId, assignedDoctor, firstName,  lastName, licenseNumber, 'active'];
+    const values2 = [
+      userId,
+      assignedDoctor,
+      firstName,
+      lastName,
+      licenseNumber,
+      "active",
+    ];
     const result2 = await pool.query(query2, values2);
     const nurseId = result2.rows[0].nurse_id;
 
@@ -1341,10 +1388,7 @@ app.post('/api/addNurse', async (req, res) => {
   }
 });
 
-
-
-app.get('/api/appointmentRequests/:nurseId', async (req, res) => {
-
+app.get("/api/appointmentRequests/:nurseId", async (req, res) => {
   const { nurseId } = req.params;
   try {
     const result1 = await pool.query(
@@ -1375,79 +1419,74 @@ app.get('/api/appointmentRequests/:nurseId', async (req, res) => {
           appointment_requests.preferred_doctor_id = $1 
           AND appointment_requests.status = 'pending'`,
       [doctorId]
-    );    
+    );
 
     res.status(200).json(result2.rows);
-
   } catch (err) {
-    console.error('Error fetching requests list:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching requests list:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
-
-app.get('/api/getNurseId/:userId', async (req, res) => {
-
+app.get("/api/getNurseId/:userId", async (req, res) => {
   const { userId } = req.params;
   try {
     const result = await pool.query(
       `SELECT nurse_id FROM nurses WHERE user_id = $1`,
       [userId]
-    )
+    );
 
     res.status(200).json(result.rows);
-
   } catch (err) {
-    console.error('Error fetching nurse id:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching nurse id:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
-
-
-app.post('/api/nurseRejectAppointmentRequest/:requestId', async (req, res) => {
+app.post("/api/nurseRejectAppointmentRequest/:requestId", async (req, res) => {
   const { requestId } = req.params;
-
 
   try {
     const result = await pool.query(
       `UPDATE appointment_requests SET status = 'rejected' WHERE request_id = $1`,
       [requestId]
-    )
-
+    );
   } catch (error) {
-    console.error('Error rejecting request:', error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    console.error("Error rejecting request:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
-
-
-app.post('/api/nurseAcceptAppointmentRequest/:requestId', async (req, res) => {
+app.post("/api/nurseAcceptAppointmentRequest/:requestId", async (req, res) => {
   const { requestId } = req.params;
 
   try {
     const result1 = await pool.query(
       `UPDATE appointment_requests SET status = 'approved' WHERE request_id = $1`,
       [requestId]
-    )
+    );
 
     const result2 = await pool.query(
       `SELECT patient_id, preferred_doctor_id, slot_id, reason, preferred_date FROM appointment_requests WHERE request_id = $1`,
       [requestId]
-    )
-    
+    );
+
     const result3 = await pool.query(
       `INSERT INTO appointments(patient_id, doctor_id, slot_id, request_id, status, reason, date) VALUES ($1, $2, $3, $4, 'scheduled', $5, $6)`,
-      [result2.rows[0].patient_id, result2.rows[0].preferred_doctor_id, result2.rows[0].slot_id, requestId, result2.rows[0].reason, result2.rows[0].preferred_date]
-    )
-
+      [
+        result2.rows[0].patient_id,
+        result2.rows[0].preferred_doctor_id,
+        result2.rows[0].slot_id,
+        requestId,
+        result2.rows[0].reason,
+        result2.rows[0].preferred_date,
+      ]
+    );
   } catch (error) {
-    console.error('Error accepting request:', error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    console.error("Error accepting request:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
 
 // Start the server
 app.listen(port, () => {
