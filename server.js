@@ -871,7 +871,7 @@ app.get("/api/appointments/patient/:patientId", async (req, res) => {
       JOIN patients p ON a.patient_id = p.patient_id
       JOIN appointment_slots slots ON a.slot_id = slots.slot_id
       JOIN doctors d ON a.doctor_id = d.doctor_id
-      WHERE a.patient_id = $1
+      WHERE a.patient_id = $1 AND a.status IN ('scheduled', 'completed')
       ORDER BY a.date DESC, slots.start_time ASC
     `;
     // // console.log("appointmentsQuery", patientId);
@@ -1455,6 +1455,10 @@ app.post("/api/nurseRejectAppointmentRequest/:requestId", async (req, res) => {
   }
 });
 
+
+
+
+
 app.post("/api/nurseAcceptAppointmentRequest/:requestId", async (req, res) => {
   const { requestId } = req.params;
 
@@ -1501,6 +1505,85 @@ app.post("/api/nurseAcceptAppointmentRequest/:requestId", async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
+
+
+app.post("/api/appointments/:appointmentId/review", async (req, res) => {
+  const { appointmentId } = req.params;
+  const { rating, feedback } = req.body;
+
+  if (typeof rating !== 'number' || rating < 1 || rating > 5) {
+    return res.status(400).json({ message: "Rating must be a number between 1 and 5." });
+  }
+
+  if (!feedback || feedback.trim() === "") {
+    return res.status(400).json({ message: "Feedback cannot be empty." });
+  }
+
+  try {
+    const result1 = await pool.query(
+      `SELECT patient_id, doctor_id FROM appointments WHERE appointment_id = $1`,
+      [appointmentId]
+    );
+
+    if (result1.rows.length === 0) {
+      return res.status(404).json({ message: "Appointment not found." });
+    }
+
+    console.log(result1)
+
+    // Insert the review into the database
+    await pool.query(
+      `INSERT INTO reviews (appointment_id, patient_id, doctor_id, rating, feedback) 
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        appointmentId,
+        result1.rows[0].patient_id,
+        result1.rows[0].doctor_id,
+        rating,
+        feedback,
+      ]
+    );
+
+    const result3 = await pool.query(
+      `UPDATE appointments SET status = 'reviewed' WHERE appointment_id = $1`,
+      [appointmentId]
+    );
+
+    return res.status(200).json({ message: "Review submitted successfully!" });
+
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+
+
+
+app.post("/api/appointmentRequests/cancel", async (req, res) => {
+  const { request_id, cancellationReason } = req.body;
+
+  try {
+
+    const result = await pool.query(
+      `UPDATE appointment_requests SET status = 'cancelled', cancellation_reason = $1 WHERE request_id = $2`,
+      [
+        cancellationReason,
+        request_id
+      ]
+    );
+
+    return res.status(200).json({ message: "Request cancelled successfully!" });
+
+  } catch (error) {
+    console.error("Error submitting request:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+
+
 
 // Start the server
 app.listen(port, () => {

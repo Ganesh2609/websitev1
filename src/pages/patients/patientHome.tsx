@@ -514,6 +514,12 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
       setLoading(false);
     }
   };
+  
+
+  const closeModal = () => {
+    const closeModalTrigger = document.querySelector(".modal-close-button");
+    closeModalTrigger?.click();
+  };
 
   const handleBookAppointment = async () => {
     try {
@@ -529,6 +535,7 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
 
       await createAppointment(appointmentData);
       // Handle success, such as showing a success message or redirecting the user
+      closeModal(); 
     } catch (error) {
       // Handle error, such as displaying an error message to the user
       console.error("Error creating appointment:", error);
@@ -680,9 +687,6 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
           </div>
         </ModalContent>
         <ModalFooter className="gap-4">
-          <button className="px-2 py-1 bg-gray-200 text-black dark:bg-black dark:border-black dark:text-white border border-gray-300 rounded-md text-sm w-28">
-            Cancel
-          </button>
           <button
             className="bg-black text-white dark:bg-white dark:text-black text-sm px-2 py-1 rounded-md border border-black w-28"
             onClick={handleBookAppointment}
@@ -724,6 +728,39 @@ const SkeletonFour = () => {
   const [patientId, setpatientId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const { toast } = useToast();
+
+
+  const [cancellationReason, setCancellationReason] = useState("");
+
+  const handleAppointmentRequestCancel = async (request_id) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/appointmentRequests/cancel`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            request_id,
+            cancellationReason
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to cancel appointment");
+      }
+
+      const data = await response.json();
+      alert("Appointment request cancelled successfully!");
+    } catch (err) {
+      setError(err.message);
+      console.error("Error cancelling appointment request:", err);
+    }
+  };
+  
 
   // Get doctor ID from localStorage on mount
   useEffect(() => {
@@ -879,6 +916,7 @@ const SkeletonFour = () => {
       </div>
     );
   }
+  
 
   return (
     <motion.div
@@ -950,111 +988,74 @@ const SkeletonFour = () => {
                       </CardContent>
                     </Card>
                   </TooltipTrigger>
-                  <TooltipContent>Cancel</TooltipContent>
+                  <TooltipContent>
+
+                    <ModalTrigger className="flex justify-center group/modal-btn">
+                      <button className="bg-red-500 text-white no-underline group cursor-pointer relative shadow-2xl rounded-full text-xs font-semibold leading-6 inline-block">
+                        {/* Radial gradient effect on hover */}
+                        <span className="absolute inset-0 overflow-hidden rounded-full">
+                          <span className="absolute inset-0 rounded-full bg-[image:radial-gradient(75%_100%_at_50%_0%,rgba(255,255,255,0.3)_0%,rgba(255,255,255,0)_75%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
+                        </span>
+                        <div className="relative flex items-center z-10 rounded-full bg-red-500 px-4 ring-1 ring-white/10">
+                          <span className="text-white font-bold">Cancel request</span>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              stroke="currentColor"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="1.5"
+                              d="M10.75 8.75L14.25 12L10.75 15.25"
+                            ></path>
+                          </svg>
+                        </div>
+                        <span className="absolute -bottom-0 left-[1.125rem] h-px w-[calc(100%-2.25rem)] bg-gradient-to-r from-red-400/0 via-white/90 to-red-400/0 transition-opacity duration-500 group-hover:opacity-40"></span>
+                      </button>
+                    </ModalTrigger>
+
+                  </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </motion.div>
 
             <ModalBody>
+
               <ModalContent>
                 <h4 className="text-lg md:text-2xl text-neutral-600 dark:text-neutral-100 font-bold text-center mb-8">
-                  Aprrove{" "}
-                  <span className="px-1 py-0.5  rounded-md bg-gray-100 dark:bg-neutral-800 dark:border-neutral-700 border border-gray-200">
-                    Patient Request
-                  </span>{" "}
-                  now! ✔️
+                  Cancel appointment request
                 </h4>
-                <div className="py-6 flex justify-center items-center">
-                  <motion.div
-                    key={request.request_id}
-                    style={{
-                      rotate: 0,
-                    }}
-                    whileHover={{
-                      scale: 1.1,
-                      rotate: 0,
-                      zIndex: 100,
-                    }}
-                    whileTap={{
-                      scale: 1.1,
-                      rotate: 0,
-                      zIndex: 100,
-                    }}
-                    className="rounded-xl -mr-4 mt-4 p-1 bg-white dark:bg-neutral-800 dark:border-neutral-700 border border-neutral-100 flex-shrink-0 overflow-hidden"
+                <div className="px-6 py-4">
+                  <label
+                    htmlFor="cancellationReason"
+                    className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
                   >
-                    <img
-                      src="https://pbs.twimg.com/profile_images/1417752099488636931/cs2R59eW_400x400.jpg"
-                      alt="avatar"
-                      className="relative h-20 w-20 border-2 border-white dark:border-black"
-                    />
-                  </motion.div>
-                </div>
-                <div className="mt-4 px-20 space-x-5 w-full p-6 flex flex-row items-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <User2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    <p className="font-medium text-neutral-900 dark:text-neutral-100">
-                      {request.fname} {request.lname}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-center gap-2">
-                    <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                      {getProperDate(request.preferred_date).dateOnly}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-center gap-2">
-                    <Stethoscope className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
-                      {request.reason}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-center">
-                    <div className="flex items-center gap-1 px-3 py-1 rounded-full  bg-gradient-to-r from-pink-500 to-violet-500">
-                      <Clock className="w-3 h-3 text-white" />
-                      <p className="text-xs font-medium text-white">
-                        {request.start_time.split(":")[0] +
-                          ":" +
-                          request.start_time.split(":")[1]}
-                      </p>
-                    </div>
-                  </div>
+                    Please provide the reason for cancellation:
+                  </label>
+                  <textarea
+                    id="cancellationReason"
+                    rows="8"
+                    className="w-full border border-neutral-300 dark:border-neutral-700 rounded-md p-3 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+                    placeholder="Enter your reason here..."
+                    onChange={(e) => setCancellationReason(e.target.value)}
+                  ></textarea>
                 </div>
               </ModalContent>
-              <ModalFooter className="gap-6">
+
+              <ModalFooter className="gap-6">        
                 <button
-                  className={`px-2 py-1 bg-gray-200 text-black dark:bg-green-500 dark:border-black dark:text-white border border-gray-300 rounded-md text-sm w-28 ${
-                    processingId === request.request_id
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
-                  onClick={() =>
-                    handleAppointmentAction(request.request_id, "reject")
-                  }
+                  className={`px-2 py-1 bg-red-600 text-white dark:bg-red-700 dark:text-white border border-red-700 dark:border-red-800 rounded-md text-sm w-36`}
+                  onClick={() => handleAppointmentRequestCancel(request.request_id)}
                   disabled={processingId === request.request_id}
                 >
-                  {processingId === request.request_id
-                    ? "Processing..."
-                    : "Reject"}
-                </button>
-                <button
-                  className={`bg-black text-white dark:bg-red-700 dark:text-black text-sm px-2 py-1 rounded-md border border-black w-28 ${
-                    processingId === request.request_id
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
-                  onClick={() =>
-                    handleAppointmentAction(request.request_id, "approve")
-                  }
-                  disabled={processingId === request.request_id}
-                >
-                  {processingId === request.request_id
-                    ? "Processing..."
-                    : "Book Now"}
+                  Confirm
                 </button>
               </ModalFooter>
+
             </ModalBody>
           </Modal>
         ))}
