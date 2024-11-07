@@ -34,12 +34,11 @@ export const getDates = async (formData: { doctor_id: string; date: DateValue })
 };
 
 
-
 export const createAppointment = async (appointmentData: {
-  userId: string | undefined;
-  patient: string;
+  userId: string | null;
+  patient: string| null;
   primaryPhysician: string;
-  schedule: Date; // Expecting a Date object
+  schedule: DateValue; // Expecting a Date object
   timeSlot: string | null;
   reason: string;
 }) => {
@@ -48,7 +47,7 @@ export const createAppointment = async (appointmentData: {
       userId: appointmentData.userId,
       patient: appointmentData.patient,
       preferredDoctorId: appointmentData.primaryPhysician,
-      preferredDate: appointmentData.schedule.toISOString(), // Convert Date to ISO string
+      preferredDate: appointmentData.schedule, // Convert Date to ISO string
       slotId: appointmentData.timeSlot,
       reason: appointmentData.reason,
     });

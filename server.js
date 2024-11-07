@@ -476,10 +476,11 @@ app.post("/api/appointments", async (req, res) => {
     userId,
     patient,
     preferredDoctorId,
-    preferredDate, // This will now be an ISO string
+    preferredDate,
     slotId,
     reason,
   } = req.body;
+  const formattedDate = `${preferredDate.year}-${String(preferredDate.month).padStart(2, '0')}-${String(preferredDate.day).padStart(2, '0')}`;
 
   try {
     const result = await pool.query(
@@ -491,7 +492,7 @@ app.post("/api/appointments", async (req, res) => {
           reason
         ) VALUES ($1, $2, $3, $4, $5)
         RETURNING request_id`,
-      [patient, preferredDoctorId, preferredDate, slotId, reason]
+      [patient, preferredDoctorId, formattedDate, slotId, reason]
     );
 
     const newAppointment = result.rows[0]; // Get the newly created appointment
