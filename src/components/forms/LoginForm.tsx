@@ -83,8 +83,10 @@ export const LoginForm = () => {
       onOpen(); // Admin-specific modal
     } else if (role === "doctor") {
       navigate(`/doctors/${user_id}/home`);
-    } else {
+    } else if (role === "patient")  {
       navigate(`/patients/${user_id}/home`);
+    } else {
+      navigate(`/nurses/${user_id}/home`);
     }
   };
 

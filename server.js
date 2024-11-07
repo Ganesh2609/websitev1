@@ -1278,9 +1278,9 @@ app.delete('/api/deleteNurse/:nurseId', async (req, res) => {
 
 
 app.post('/api/addNurse', async (req, res) => {
-  const { username, firstName, lastName, phone, email, licenseNumber } = req.body;
+  const { username, firstName, lastName, phone, email, licenseNumber, assignedDoctor } = req.body;
 
-  if (!username || !firstName || !lastName || !phone || !email || !licenseNumber) {
+  if (!username || !firstName || !lastName || !phone || !email || !licenseNumber || !assignedDoctor) {
     return res.status(400).json({ message: 'All fields are required.' });
   }
 
@@ -1295,10 +1295,10 @@ app.post('/api/addNurse', async (req, res) => {
 
 
     const query2 = `
-      INSERT INTO nurses (user_id, first_name, last_name, license_number, status)
-      VALUES ($1, $2, $3, $4, $5) RETURNING nurse_ID
+      INSERT INTO nurses (user_id, doctor_id, first_name, last_name, license_number, status)
+      VALUES ($1, $2, $3, $4, $5, $6) RETURNING nurse_ID
     `;
-    const values2 = [userId, firstName,  lastName, licenseNumber, 'active'];
+    const values2 = [userId, assignedDoctor, firstName,  lastName, licenseNumber, 'active'];
     const result2 = await pool.query(query2, values2);
     const nurseId = result2.rows[0].nurse_id;
     
@@ -1306,6 +1306,113 @@ app.post('/api/addNurse', async (req, res) => {
 
   } catch (error) {
     console.error('Error adding nurse:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+
+
+app.get('/api/appointmentRequests/:nurseId', async (req, res) => {
+
+  const { nurseId } = req.params;
+  try {
+    const result1 = await pool.query(
+      `SELECT doctor_id FROM nurses WHERE nurse_id = $1`,
+      [nurseId]
+    );
+    const doctorId = result1.rows[0].doctor_id;
+
+    const result2 = await pool.query(
+      `SELECT 
+          appointment_requests.request_id,
+          patients.fname || ' ' || patients.lname AS patient_name,
+          doctors.first_name || ' ' || doctors.last_name AS doctor_name,
+          appointment_requests.preferred_date,
+          appointment_slots.day_of_week,
+          appointment_slots.start_time,
+          appointment_requests.reason,
+          appointment_requests.urgency_level
+       FROM 
+          appointment_requests
+       INNER JOIN 
+          appointment_slots ON appointment_requests.slot_id = appointment_slots.slot_id
+       INNER JOIN 
+          patients ON appointment_requests.patient_id = patients.patient_id
+       INNER JOIN 
+          doctors ON appointment_requests.preferred_doctor_id = doctors.doctor_id
+       WHERE 
+          appointment_requests.preferred_doctor_id = $1 
+          AND appointment_requests.status = 'pending'`,
+      [doctorId]
+    );    
+
+    res.status(200).json(result2.rows);
+
+  } catch (err) {
+    console.error('Error fetching requests list:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+app.get('/api/getNurseId/:userId', async (req, res) => {
+
+  const { userId } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT nurse_id FROM nurses WHERE user_id = $1`,
+      [userId]
+    )
+
+    res.status(200).json(result.rows);
+
+  } catch (err) {
+    console.error('Error fetching nurse id:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+
+app.post('/api/nurseRejectAppointmentRequest/:requestId', async (req, res) => {
+  const { requestId } = req.params;
+
+
+  try {
+    const result = await pool.query(
+      `UPDATE appointment_requests SET status = 'rejected' WHERE request_id = $1`,
+      [requestId]
+    )
+
+  } catch (error) {
+    console.error('Error rejecting request:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+
+
+app.post('/api/nurseAcceptAppointmentRequest/:requestId', async (req, res) => {
+  const { requestId } = req.params;
+
+  try {
+    const result1 = await pool.query(
+      `UPDATE appointment_requests SET status = 'approved' WHERE request_id = $1`,
+      [requestId]
+    )
+
+    const result2 = await pool.query(
+      `SELECT patient_id, preferred_doctor_id, slot_id, reason, preferred_date FROM appointment_requests WHERE request_id = $1`,
+      [requestId]
+    )
+    
+    const result3 = await pool.query(
+      `INSERT INTO appointments(patient_id, doctor_id, slot_id, request_id, status, reason, date) VALUES ($1, $2, $3, $4, 'scheduled', $5, $6)`,
+      [result2.rows[0].patient_id, result2.rows[0].preferred_doctor_id, result2.rows[0].slot_id, requestId, result2.rows[0].reason, result2.rows[0].preferred_date]
+    )
+
+  } catch (error) {
+    console.error('Error accepting request:', error);
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 });

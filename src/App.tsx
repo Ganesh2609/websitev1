@@ -12,7 +12,7 @@ import ManageNurse from "./pages/admin/ManageNurse";
 import ManageSpecialization from "./pages/admin/ManageSpecialization";
 import DoctorHome from "./pages/doctors/DoctorHome";
 import PatientHome from "./pages/patients/patientHome";
-
+import NurseHome from "./pages/nurses/NurseHome";
 
 function App() {
   return (
@@ -26,6 +26,7 @@ function App() {
           <Route path="/admin/specialization" element={<ManageSpecialization />} />
           <Route path="/doctors/:user_id/home" element={<DoctorHome />} />
           <Route path="/patients/:user_id/home" element={<PatientHome />} />
+          <Route path="/nurses/:user_id/home" element={<NurseHome />} />
           <Route path="/patients/:user_id/register" element={<Register />} />
           <Route path="/patients/:patient_id/new-appointment" element={<NewAppointment />} />
           <Route path="/patients/:patient_id/new-appointment/success/:request_id" element={<RequestSuccess />} />
