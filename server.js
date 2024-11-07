@@ -42,7 +42,6 @@ const upload = multer({ storage });
 
 app.post("/api/createUser", async (req, res) => {
   const { username, email, password, phone, role } = req.body;
-  console.log(username, email, password, phone, role);
   try {
     // Check if the username already exists
     // Validate the role (optional: you can also enforce this via ENUM in the DB)
@@ -55,7 +54,7 @@ app.post("/api/createUser", async (req, res) => {
       [username]
     );
     if (existingUser.rows.length > 0) {
-      console.log("User with this username already exists");
+      // console.log("User with this username already exists");
       return res
         .status(400)
         .json({ error: "User with this username already exists" });
@@ -303,7 +302,6 @@ app.post(
       privacyConsent,
       disclosureConsent,
     } = req.body;
-    console.log(req.body);
     const identificationDocumentUrl = req.file ? req.file.path : null;
     try {
       // Insert the new patient into the database
@@ -317,32 +315,32 @@ app.post(
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
       RETURNING *;
     `;
-      console.log("gender", [
-        user_id,
-        fname,
-        lname,
-        birthDate,
-        gender,
-        address,
-        phone,
-        email,
-        emergencyContactName,
-        emergencyContactNumber,
-        occupation,
-        primaryPhysician,
-        insuranceProvider,
-        insurancePolicyNumber,
-        identificationType,
-        identificationNumber,
-        identificationDocumentUrl,
-        allergies,
-        currentMedication,
-        familyMedicalHistory,
-        pastMedicalHistory,
-        treatmentConsent,
-        privacyConsent,
-        disclosureConsent,
-      ]);
+      // console.log("gender", [
+      //   user_id,
+      //   fname,
+      //   lname,
+      //   birthDate,
+      //   gender,
+      //   address,
+      //   phone,
+      //   email,
+      //   emergencyContactName,
+      //   emergencyContactNumber,
+      //   occupation,
+      //   primaryPhysician,
+      //   insuranceProvider,
+      //   insurancePolicyNumber,
+      //   identificationType,
+      //   identificationNumber,
+      //   identificationDocumentUrl,
+      //   allergies,
+      //   currentMedication,
+      //   familyMedicalHistory,
+      //   pastMedicalHistory,
+      //   treatmentConsent,
+      //   privacyConsent,
+      //   disclosureConsent,
+      // ]);
       const newPatient = await pool.query(insertPatientQuery, [
         user_id,
         fname,
@@ -387,13 +385,13 @@ app.post("/api/patients/new-appointments/getDates", async (req, res) => {
   }
 
   try {
-    console.log("getDate", doctor_id, date);
+    // console.log("getDate", doctor_id, date);
     // Convert the date to 'YYYY-MM-DD' format without timezone issues
     const formattedDate = `${date.year}-${String(date.month).padStart(
       2,
       "0"
     )}-${String(date.day).padStart(2, "0")}`;
-    console.log(formattedDate);
+    // console.log(formattedDate);
 
     // Open a new client connection from the pool
     const client = await pool.connect();
@@ -448,7 +446,7 @@ app.get("/api/doctors/active", async (req, res) => {
   try {
     // Open a new client connection from the pool
     const client = await pool.connect();
-    console.log("result.rows");
+    // console.log("result.rows");
     // Define the SQL query to get all active doctors
     const query = `
       SELECT  d.doctor_id, d.user_id, d.first_name, d.last_name, d.years_of_experience, ms.specialization_id, ms.specialization_name, ms.medical_field
@@ -462,7 +460,7 @@ app.get("/api/doctors/active", async (req, res) => {
 
     // Execute the query
     const result = await client.query(query);
-    console.log(result.rows);
+    // console.log(result.rows);
     // Return the list of doctors
     res.status(200).json({ doctors: result.rows });
 
@@ -480,7 +478,7 @@ app.post("/api/appointments", async (req, res) => {
   const formattedDate = `${preferredDate.year}-${String(
     preferredDate.month
   ).padStart(2, "0")}-${String(preferredDate.day).padStart(2, "0")}`;
-  console.log("preferred_doctor_id", preferredDoctorId);
+  // console.log("preferred_doctor_id", preferredDoctorId);
   try {
     const result = await pool.query(
       `INSERT INTO appointment_requests (
@@ -509,7 +507,7 @@ app.post("/api/appointments", async (req, res) => {
       [preferredDoctorId]
     );
 
-    console.log(doctor);
+    // console.log(doctor);
     await pool.query(
       `INSERT INTO notifications (user_id, message, is_read)
        VALUES ($1, $2, $3)`,
@@ -520,7 +518,7 @@ app.post("/api/appointments", async (req, res) => {
       ]
     );
 
-    console.log(newAppointment);
+    // console.log(newAppointment);
     res.status(201).json(newAppointment); // Send the new appointment data back as a response
   } catch (error) {
     console.error("Error saving appointment:", error);
@@ -557,7 +555,7 @@ app.get("/api/getrequests/:request_id", async (req, res) => {
 
 app.get("/api/getrequestbydoctor/:doctor_id", async (req, res) => {
   let { doctor_id } = req.params;
-  // console.log(doctor_id);
+  // // console.log(doctor_id);
   try {
     const result = await pool.query(
       `SELECT asr.request_id, asl.slot_id, asl.day_of_week, asl.start_time, asr.reason, asr.status, asr.preferred_date, p.fname, p.lname
@@ -572,9 +570,9 @@ app.get("/api/getrequestbydoctor/:doctor_id", async (req, res) => {
         AND asr.status = 'pending'`,
       [doctor_id]
     );
-    // console.log(result.rows);
+    // // console.log(result.rows);
     const appointments = result.rows;
-    // console.log(appointments);
+    // // console.log(appointments);
     if (!appointments.length) {
       return res.status(404).json({ message: "No appointments found" });
     }
@@ -588,7 +586,7 @@ app.get("/api/getrequestbydoctor/:doctor_id", async (req, res) => {
 
 app.get("/api/getrequestbypatient/:patient_id", async (req, res) => {
   let { patient_id } = req.params;
-  console.log(patient_id);
+  // console.log(patient_id);
   try {
     const result = await pool.query(
       `SELECT asr.request_id, asl.slot_id, asl.day_of_week, asl.start_time, asr.reason, asr.status, asr.preferred_date, d.first_name, d.last_name
@@ -601,9 +599,9 @@ app.get("/api/getrequestbypatient/:patient_id", async (req, res) => {
         AND asr.status = 'pending'`,
       [patient_id]
     );
-    // console.log(result.rows);
+    // // console.log(result.rows);
     const appointments = result.rows;
-    // console.log(appointments);
+    // // console.log(appointments);
     if (!appointments.length) {
       return res.status(404).json({ message: "No appointments found" });
     }
@@ -638,17 +636,17 @@ app.get("/api/recentappointments", async (req, res) => {
 app.post("/api/appointments/approve", async (req, res) => {
   const { requestId, doctorId } = req.body;
   const client = await pool.connect();
-  console.log("hiiiiiii");
+  // console.log("hiiiiiii");
   try {
     await client.query("BEGIN");
-    console.log(requestId, doctorId);
+    // console.log(requestId, doctorId);
     // Check if the request exists and is still pending
     const checkRequest = await client.query(
       `SELECT status FROM appointment_requests 
        WHERE request_id = $1 AND preferred_doctor_id = $2`,
       [requestId, doctorId]
     );
-    console.log(checkRequest);
+    // console.log(checkRequest);
     if (checkRequest.rows.length === 0) {
       return res.status(404).json({
         success: false,
@@ -776,7 +774,7 @@ app.get("/api/appointments/:doctorId", async (req, res) => {
   const { doctorId } = req.params;
   const client = await pool.connect();
 
-  console.log("doctorId", doctorId);
+  // console.log("doctorId", doctorId);
 
   try {
     // First query: Get appointment details
@@ -797,7 +795,7 @@ app.get("/api/appointments/:doctorId", async (req, res) => {
       JOIN patients p ON a.patient_id = p.patient_id
       JOIN appointment_slots slots ON a.slot_id = slots.slot_id
       JOIN doctors d ON a.doctor_id = d.doctor_id
-      WHERE a.doctor_id = $1
+      WHERE a.doctor_id = $1 AND a.status = 'scheduled'
       ORDER BY a.date DESC, slots.start_time ASC
     `;
 
@@ -806,7 +804,7 @@ app.get("/api/appointments/:doctorId", async (req, res) => {
       SELECT 
         COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled,
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed,
-        COUNT(CASE WHEN status = 'canceled' THEN 1 END) as cancelled
+        COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled
       FROM appointments
       WHERE doctor_id = $1
     `;
@@ -817,8 +815,8 @@ app.get("/api/appointments/:doctorId", async (req, res) => {
       client.query(countsQuery, [doctorId]),
     ]);
 
-    console.log("appointmentsResult", appointmentsResult.rows);
-    console.log("countsResult", countsResult.rows);
+    // console.log("appointmentsResult", appointmentsResult.rows);
+    // console.log("countsResult", countsResult.rows);
 
     res.status(200).json({
       success: true,
@@ -852,7 +850,7 @@ app.get("/api/appointments/patient/:patientId", async (req, res) => {
     });
   }
 
-  // console.log("patientId", patientId);
+  // // console.log("patientId", patientId);
 
   try {
     // First query: Get appointment details
@@ -876,11 +874,11 @@ app.get("/api/appointments/patient/:patientId", async (req, res) => {
       WHERE a.patient_id = $1
       ORDER BY a.date DESC, slots.start_time ASC
     `;
-    // console.log("appointmentsQuery", patientId);
+    // // console.log("appointmentsQuery", patientId);
     const appointmentsResult = await client.query(appointmentsQuery, [
       patientId,
     ]);
-    // console.log("appointmentsResult", appointmentsResult.rows);
+    // // console.log("appointmentsResult", appointmentsResult.rows);
     res.status(200).json({
       success: true,
       appointments: appointmentsResult.rows,
@@ -923,7 +921,7 @@ app.post("/api/appointments/:id/complete", async (req, res) => {
       !treatments ||
       !Array.isArray(treatments)
     ) {
-      console.log(doctorNotes, billingAmount, doctorId, treatments);
+      // console.log(doctorNotes, billingAmount, doctorId, treatments);
       throw new Error("Missing required fields");
     }
 
@@ -1032,7 +1030,7 @@ app.post("/api/appointments/:appointmentId/cancel", async (req, res) => {
 
     const { appointmentId } = req.params;
     const { cancellationReason } = req.body;
-    console.log(appointmentId);
+    // console.log(appointmentId);
     // Validate required fields
     if (!cancellationReason) {
       return res.status(400).json({
@@ -1053,7 +1051,7 @@ app.post("/api/appointments/:appointmentId/cancel", async (req, res) => {
             FROM appointments a
             JOIN patients p ON a.patient_id = p.patient_id
             JOIN doctors d ON a.doctor_id = d.doctor_id
-            WHERE a.appointment_id = $1 AND a.status != 'canceled'`,
+            WHERE a.appointment_id = $1 AND a.status != 'cancelled'`,
       [appointmentId]
     );
 
@@ -1070,7 +1068,7 @@ app.post("/api/appointments/:appointmentId/cancel", async (req, res) => {
     await client.query(
       `UPDATE appointments 
             SET 
-                status = 'canceled',
+                status = 'cancelled',
                 cancellation_reason = $1
             WHERE appointment_id = $2`,
       [cancellationReason, appointmentId]
@@ -1482,6 +1480,22 @@ app.post("/api/nurseAcceptAppointmentRequest/:requestId", async (req, res) => {
         result2.rows[0].preferred_date,
       ]
     );
+
+    const result4 = await pool.query(
+      `SELECT user_id FROM patients WHERE patient_id = $1`,
+      [
+        result2.rows[0].patient_id
+      ]
+    );
+    const userId = result4.rows[0].user_id;
+
+    const result5 = await pool.query(
+      `INSERT INTO notifications(user_id, message) VALUES ($1, 'Your appointment has been apporoved by the management and is scheduled now.')`,
+      [
+        userId
+      ]
+    );
+
   } catch (error) {
     console.error("Error accepting request:", error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -1490,5 +1504,5 @@ app.post("/api/nurseAcceptAppointmentRequest/:requestId", async (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  // console.log(`Server running on port ${port}`);
 });

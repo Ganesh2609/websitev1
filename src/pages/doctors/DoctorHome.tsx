@@ -69,14 +69,14 @@ const DoctorHome = () => {
   useEffect(() => {
     const doctorId = localStorage.getItem("doctor_id");
     if (!doctorId) return;
-
+  
     const fetchAppointments = async () => {
       try {
         const response = await fetch(
           `http://localhost:5000/api/appointments/${doctorId}`
         );
         if (!response.ok) throw new Error("Failed to fetch appointments");
-
+  
         const data = await response.json();
         if (data.success) {
           setAppointments({
@@ -99,9 +99,13 @@ const DoctorHome = () => {
         setLoading(false);
       }
     };
-
-    fetchAppointments();
-  }, []);
+  
+    // Call `fetchAppointments` every 2 seconds
+    const intervalId = setInterval(fetchAppointments, 2000);
+  
+    // Clear the interval when the component unmounts
+    return () => clearInterval(intervalId);
+  }, []);  
 
   return (
     <SidebarProvider>
@@ -301,7 +305,7 @@ const SkeletonFour = () => {
     try {
       const data = await getRequestsByDoctor(doctorId);
       if (Array.isArray(data) && data.length > 0) {
-        const newData = data.slice(0, 3);
+        const newData = data.slice(0, 2);
         // Only update if data has changed
         setRequests((prev) => {
           const hasChanged = newData.some(

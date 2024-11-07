@@ -1,4 +1,4 @@
-import { HomeSidebar } from "@/pages/doctors/HomeSidebar";
+import { HomeSidebar } from "@/pages/patients/HomeSidebar";
 // import { SidebarRight } from "@/components/sidebar-right";
 import {
   Breadcrumb,
@@ -76,14 +76,14 @@ const PatientHome = () => {
   useEffect(() => {
     const patientId = localStorage.getItem("patient_id");
     if (!patientId) return;
-
+  
     const fetchAppointments = async () => {
       try {
         const response = await fetch(
           `http://localhost:5000/api/appointments/patient/${patientId}`
         );
         if (!response.ok) throw new Error("Failed to fetch appointments");
-
+  
         const data = await response.json();
         if (data.success) {
           setAppointments({
@@ -106,10 +106,17 @@ const PatientHome = () => {
         setLoading(false);
       }
     };
-
+  
+    // Initial fetch call
     fetchAppointments();
+  
+    // Set up interval to fetch every 2 seconds
+    const intervalId = setInterval(fetchAppointments, 2000);
+  
+    // Clear interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
-
+  
   return (
     <SidebarProvider>
       <HomeSidebar />
@@ -357,6 +364,7 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
       ent: [],
     });
   const [selectedDoctor, setSelectedDoctor] = useState<string>("");
+  const [selectedReason, setSelectedReason] = useState("");
 
   interface SpecializationEntry {
     id: string;
@@ -462,6 +470,7 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
     fetchAvailableSlots(e.target.value, selectedDate);
   };
 
+
   const generateTimeSlots = (availableSlots: any[]) => {
     const timeSlots = [];
     let currentTime = 10;
@@ -514,7 +523,7 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
         primaryPhysician: selectedDoctor,
         schedule: selectedDate,
         timeSlot: selectedTimeSlot.id,
-        reason: "Reason for appointment",
+        reason: selectedReason,
       };
       console.log(appointmentData);
 
@@ -652,7 +661,7 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
                     </div>
                   </div>
                 </SelectItem>
-              )}
+              )}  
             </Select>
 
             <AvailableTimeSlots
@@ -666,6 +675,7 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
               label="Reason"
               labelPlacement="outside"
               placeholder="Enter your Reason"
+              onChange={(e) => setSelectedReason(e.target.value)}
             />
           </div>
         </ModalContent>
@@ -940,7 +950,7 @@ const SkeletonFour = () => {
                       </CardContent>
                     </Card>
                   </TooltipTrigger>
-                  <TooltipContent></TooltipContent>
+                  <TooltipContent>Cancel</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </motion.div>

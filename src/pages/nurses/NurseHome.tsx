@@ -1,4 +1,4 @@
-import { HomeSidebar } from "@/pages/doctors/HomeSidebar";
+import { HomeSidebar } from "@/pages/nurses/HomeSidebar";
 
 import {
     Breadcrumb,
