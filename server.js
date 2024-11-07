@@ -6,6 +6,7 @@ import cors from "cors";
 import pkg from "pg";
 import multer from "multer";
 import { request } from "http";
+import { useDateFormatter } from "@react-aria/i18n";
 
 const { json } = pkg1;
 const { Pool } = pkg;
@@ -378,6 +379,7 @@ app.post(
 );
 
 // Get available slots for a doctor on a specific date
+
 app.post("/api/patients/new-appointments/getDates", async (req, res) => {
   let { doctor_id, date } = req.body; // Doctor ID and date will be passed in the request body
   if (!doctor_id || !date) {
@@ -385,11 +387,9 @@ app.post("/api/patients/new-appointments/getDates", async (req, res) => {
   }
 
   try {
-    // Convert the date to 'YYYY-MM-DD' without timezone issues
-    const localDate = new Date(date);
-    const formattedDate = `${localDate.getFullYear()}-${String(
-      localDate.getMonth() + 1
-    ).padStart(2, "0")}-${String(localDate.getDate()).padStart(2, "0")}`;
+    console.log('getDate',doctor_id, date);
+    // Convert the date to 'YYYY-MM-DD' format without timezone issues
+    const formattedDate = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
     console.log(formattedDate);
 
     // Open a new client connection from the pool
@@ -827,7 +827,7 @@ app.get("/api/appointments/patient/:patientId", async (req, res) => {
     });
   }
 
-  console.log("patientId", patientId);
+  // console.log("patientId", patientId);
 
   try {
     // First query: Get appointment details
@@ -851,11 +851,11 @@ app.get("/api/appointments/patient/:patientId", async (req, res) => {
       WHERE a.patient_id = $1
       ORDER BY a.date DESC, slots.start_time ASC
     `;
-    console.log("appointmentsQuery", patientId);
+    // console.log("appointmentsQuery", patientId);
     const appointmentsResult = await client.query(appointmentsQuery, [
       patientId,
     ]);
-    console.log("appointmentsResult", appointmentsResult.rows);
+    // console.log("appointmentsResult", appointmentsResult.rows);
     res.status(200).json({
       success: true,
       appointments: appointmentsResult.rows,
@@ -1091,116 +1091,129 @@ app.post("/api/appointments/:appointmentId/cancel", async (req, res) => {
   }
 });
 
-
 // Endpoint to get notifications for a specific user
-app.get('/api/notifications/:userId', async (req, res) => {
+app.get("/api/notifications/:userId", async (req, res) => {
   const { userId } = req.params;
 
   try {
     const result = await pool.query(
-      'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC',
+      "SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC",
       [userId]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'No notifications found' });
+      return res.status(404).json({ message: "No notifications found" });
     }
 
     res.status(200).json(result.rows);
   } catch (err) {
-    console.error('Error fetching notifications:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching notifications:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
 // Endpoint to mark a specific notification as read
-app.post('/api/notifications/:notificationId/read', async (req, res) => {
+app.post("/api/notifications/:notificationId/read", async (req, res) => {
   const { notificationId } = req.params;
   const { userId } = req.body;
 
   try {
     // Verify if the notification exists for the given user and mark it as read
     const result = await pool.query(
-      'UPDATE notifications SET is_read = TRUE WHERE notification_id = $1 AND user_id = $2 RETURNING *',
+      "UPDATE notifications SET is_read = TRUE WHERE notification_id = $1 AND user_id = $2 RETURNING *",
       [notificationId, userId]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Notification not found' });
+      return res.status(404).json({ message: "Notification not found" });
     }
 
-    res.status(200).json({ message: 'Notification marked as read' });
+    res.status(200).json({ message: "Notification marked as read" });
   } catch (err) {
-    console.error('Error marking notification as read:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error marking notification as read:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
-
 // Endpoint to select doctors for deletion
-app.get('/api/deleteDoctorsFetch', async (req, res) => {
-
+app.get("/api/deleteDoctorsFetch", async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT doctor_id, first_name, last_name, license_number, specialization_name FROM (doctors NATURAL JOIN doctor_specializations) NATURAL JOIN medical_specializations WHERE status = 'active';`
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'No doctors found' });
+      return res.status(404).json({ message: "No doctors found" });
     }
 
     res.status(200).json(result.rows);
   } catch (err) {
-    console.error('Error fetching doctors list:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching doctors list:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
-
 // Endpoint to delete a doctor by ID
-app.delete('/api/deleteDoctor/:doctorId', async (req, res) => {
+app.delete("/api/deleteDoctor/:doctorId", async (req, res) => {
   const { doctorId } = req.params;
 
   try {
-    const result = await pool.query('UPDATE doctors SET status = $1 WHERE doctor_id = $2', ['inactive', doctorId]);
+    const result = await pool.query(
+      "UPDATE doctors SET status = $1 WHERE doctor_id = $2",
+      ["inactive", doctorId]
+    );
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'Doctor not found' });
+      return res.status(404).json({ message: "Doctor not found" });
     }
 
-    res.status(200).json({ message: 'Doctor deleted successfully' });
+    res.status(200).json({ message: "Doctor deleted successfully" });
   } catch (error) {
-    console.error('Error deleting doctor:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error deleting doctor:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
-
-app.get('/api/getSpecializations', async (req, res) => {
-
+app.get("/api/getSpecializations", async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT specialization_id, specialization_name FROM medical_specializations'
+      "SELECT specialization_id, specialization_name, medical_field FROM medical_specializations"
     );
 
     if (result.rows.length === 0) {
-      return res.status(200).json({ message: 'No specializations found' });
+      return res.status(200).json({ message: "No specializations found" });
     }
 
     res.status(200).json(result.rows);
   } catch (err) {
-    console.error('Error fetching specializations list:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching specializations list:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
+app.post("/api/addDoctor", async (req, res) => {
+  const {
+    username,
+    firstName,
+    lastName,
+    phone,
+    email,
+    licenseNumber,
+    specializationId,
+    startedWorkingAt,
+  } = req.body;
 
-
-app.post('/api/addDoctor', async (req, res) => {
-  const { username, firstName, lastName, phone, email, licenseNumber, specializationId, startedWorkingAt } = req.body;
-
-  if (!username || !firstName || !lastName || !phone || !email || !licenseNumber || !specializationId || !startedWorkingAt) {
-    return res.status(400).json({ message: 'All fields are required.' });
+  if (
+    !username ||
+    !firstName ||
+    !lastName ||
+    !phone ||
+    !email ||
+    !licenseNumber ||
+    !specializationId ||
+    !startedWorkingAt
+  ) {
+    return res.status(400).json({ message: "All fields are required." });
   }
 
   try {
@@ -1208,16 +1221,29 @@ app.post('/api/addDoctor', async (req, res) => {
       INSERT INTO users (username, password_hash, phone, email, role, status)
       VALUES ($1, $2, $3, $4, $5, $6) RETURNING user_id
     `;
-    const values1 = [username, '$2b$10$YSBCwWvMkdCryiaN7Ep0x.YXne1zG210sQxsswnxmNqb1rfT7wSK.', phone, email,  'doctor', 'active'];
+    const values1 = [
+      username,
+      "$2b$10$YSBCwWvMkdCryiaN7Ep0x.YXne1zG210sQxsswnxmNqb1rfT7wSK.",
+      phone,
+      email,
+      "doctor",
+      "active",
+    ];
     const result1 = await pool.query(query1, values1);
     const userId = result1.rows[0].user_id;
-
 
     const query2 = `
       INSERT INTO doctors (user_id, first_name, last_name, license_number, status, started_working_at)
       VALUES ($1, $2, $3, $4, $5, $6) RETURNING doctor_id
     `;
-    const values2 = [userId, firstName,  lastName, licenseNumber, 'active', startedWorkingAt];
+    const values2 = [
+      userId,
+      firstName,
+      lastName,
+      licenseNumber,
+      "active",
+      startedWorkingAt,
+    ];
     const result2 = await pool.query(query2, values2);
     const doctorId = result2.rows[0].doctor_id;
 
@@ -1228,60 +1254,65 @@ app.post('/api/addDoctor', async (req, res) => {
     const values3 = [doctorId, specializationId];
     const result3 = await pool.query(query3, values3);
 
-    return res.status(201).json({ message: 'Doctor added successfully', doctorId });
-
+    return res
+      .status(201)
+      .json({ message: "Doctor added successfully", doctorId });
   } catch (error) {
-    console.error('Error adding doctor:', error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    console.error("Error adding doctor:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
-
-
-app.get('/api/deleteNursesFetch', async (req, res) => {
-
+app.get("/api/deleteNursesFetch", async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT nurse_id, first_name, last_name, license_number, status FROM nurses`
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'No nurses found' });
+      return res.status(404).json({ message: "No nurses found" });
     }
 
     res.status(200).json(result.rows);
   } catch (err) {
-    console.error('Error fetching nurses list:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching nurses list:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
-
-
-app.delete('/api/deleteNurse/:nurseId', async (req, res) => {
+app.delete("/api/deleteNurse/:nurseId", async (req, res) => {
   const { nurseId } = req.params;
 
   try {
-    const result = await pool.query('UPDATE nurses SET status = $1 WHERE nurse_id = $2', ['inactive', nurseId]);
+    const result = await pool.query(
+      "UPDATE nurses SET status = $1 WHERE nurse_id = $2",
+      ["inactive", nurseId]
+    );
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'Nurse not found' });
+      return res.status(404).json({ message: "Nurse not found" });
     }
 
-    res.status(200).json({ message: 'Nurse deleted successfully' });
+    res.status(200).json({ message: "Nurse deleted successfully" });
   } catch (error) {
-    console.error('Error deleting nurse:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error deleting nurse:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
+app.post("/api/addNurse", async (req, res) => {
+  const { username, firstName, lastName, phone, email, licenseNumber } =
+    req.body;
 
-
-app.post('/api/addNurse', async (req, res) => {
-  const { username, firstName, lastName, phone, email, licenseNumber } = req.body;
-
-  if (!username || !firstName || !lastName || !phone || !email || !licenseNumber) {
-    return res.status(400).json({ message: 'All fields are required.' });
+  if (
+    !username ||
+    !firstName ||
+    !lastName ||
+    !phone ||
+    !email ||
+    !licenseNumber
+  ) {
+    return res.status(400).json({ message: "All fields are required." });
   }
 
   try {
@@ -1289,30 +1320,35 @@ app.post('/api/addNurse', async (req, res) => {
       INSERT INTO users (username, password_hash, phone, email, role, status)
       VALUES ($1, $2, $3, $4, $5, $6) RETURNING user_id
     `;
-    const values1 = [username, '$2b$10$YSBCwWvMkdCryiaN7Ep0x.YXne1zG210sQxsswnxmNqb1rfT7wSK.', phone, email,  'nurse', 'active'];
+    const values1 = [
+      username,
+      "$2b$10$YSBCwWvMkdCryiaN7Ep0x.YXne1zG210sQxsswnxmNqb1rfT7wSK.",
+      phone,
+      email,
+      "nurse",
+      "active",
+    ];
     const result1 = await pool.query(query1, values1);
     const userId = result1.rows[0].user_id;
-
 
     const query2 = `
       INSERT INTO nurses (user_id, first_name, last_name, license_number, status)
       VALUES ($1, $2, $3, $4, $5) RETURNING nurse_ID
     `;
-    const values2 = [userId, firstName,  lastName, licenseNumber, 'active'];
+    const values2 = [userId, firstName, lastName, licenseNumber, "active"];
     const result2 = await pool.query(query2, values2);
     const nurseId = result2.rows[0].nurse_id;
-    
-    return res.status(201).json({ message: 'Nurse added successfully', nurseId });
 
+    return res
+      .status(201)
+      .json({ message: "Nurse added successfully", nurseId });
   } catch (error) {
-    console.error('Error adding nurse:', error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    console.error("Error adding nurse:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
 
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
-

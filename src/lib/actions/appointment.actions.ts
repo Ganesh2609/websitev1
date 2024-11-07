@@ -4,8 +4,10 @@ import { Appointment } from "@/types/types";
 
 import axios from 'axios';
 
-export const getDates = async (formData: { doctor_id: string; date: Date | null }) => {
-  console.log("formData", formData); 
+import {DateValue} from "@internationalized/date";
+
+export const getDates = async (formData: { doctor_id: string; date: DateValue }) => {
+  // console.log("formData", formData);     
   try {
     // Append userId as a query parameter in the URL
     const response = await fetch(`http://localhost:5000/api/patients/new-appointments/getDates`, {
@@ -63,7 +65,7 @@ export const getRequests = async (request_id: string | undefined) => {
   try {
     const response = await axios.get(`http://localhost:5000/api/getrequests/${request_id}`);
 
-    console.log('Response data:', response.data);
+    // console.log('Response data:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching appointment:', error);
@@ -76,7 +78,7 @@ export const getRequestsByDoctor = async (doctor_id: string | null) => {
   try {
     const response = await axios.get(`http://localhost:5000/api/getrequestbydoctor/${doctor_id}`);
 
-    console.log('Response data:', response.data);
+    // console.log('Response data:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching appointment:', error);
@@ -89,7 +91,7 @@ export const getRequestsByPatient = async (patient_id: string | null) => {
   try {
     const response = await axios.get(`http://localhost:5000/api/getrequestbypatient/${patient_id}`);
 
-    console.log('Response data:', response.data);
+    // console.log('Response data:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching appointment:', error);

@@ -55,7 +55,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { NCard, NCardBody } from "@nextui-org/react";
+import { NCard, NCardBody, RadioGroup } from "@nextui-org/react";
 
 import { Tabs, Tab, Chip } from "@nextui-org/react";
 
@@ -142,7 +142,9 @@ const PatientHome = () => {
                     alt="appointments"
                     className="size-8 w-fit"
                   />
-                  <h2 className="text-32-bold text-white">{appointments.scheduledCount}</h2>
+                  <h2 className="text-32-bold text-white">
+                    {appointments.scheduledCount}
+                  </h2>
                 </div>
                 <h2 className="text-left text-balance text-base md:text-xl lg:text-2xl font-semibold tracking-[-0.015em] text-white">
                   Scheduled appointments
@@ -159,7 +161,9 @@ const PatientHome = () => {
                     className="size-8 w-fit"
                   />
 
-                  <h2 className="text-32-bold text-white">{appointments.pendingCount}</h2>
+                  <h2 className="text-32-bold text-white">
+                    {appointments.pendingCount}
+                  </h2>
                 </div>
 
                 <h2 className="max-w-sm  text-left text-balance text-base md:text-xl lg:text-2xl font-semibold tracking-[-0.015em] text-white">
@@ -176,7 +180,9 @@ const PatientHome = () => {
                     alt="appointments"
                     className="size-8 w-fit"
                   />
-                  <h2 className="text-32-bold text-white">{appointments.cancelledCount}</h2>
+                  <h2 className="text-32-bold text-white">
+                    {appointments.cancelledCount}
+                  </h2>
                 </div>
                 <h2 className="max-w-sm md:max-w-lg  text-left  text-base md:text-xl lg:text-2xl font-semibold tracking-[-0.015em] text-white">
                   Cancelled appointments
@@ -304,60 +310,113 @@ const PatientHome = () => {
 };
 
 export default PatientHome;
-
-import { Select, SelectItem, DatePicker, Button } from "@nextui-org/react";
+import {
+  Select,
+  SelectItem,
+  Avatar,
+  SelectedItems,
+  DatePicker,
+  Button,
+  Textarea,
+} from "@nextui-org/react";
 import { IconStethoscope, IconSearch } from "@tabler/icons-react";
-import { CheckboxGroup } from "@nextui-org/react";
-import { CustomCheckbox } from "@/pages/patients/DoctorCard";
 import { Doctors, getDoctorIcon } from "@/constants/index";
 import { Doctor } from "@/types/types";
 
-interface SpecializationData {
-  [key: string]: { key: string; label: string }[];
-}
+import { getDates } from "@/lib/actions/appointment.actions";
+
+import {
+  DateValue,
+  parseDate,
+  getLocalTimeZone,
+  today,
+} from "@internationalized/date";
+import { useDateFormatter } from "@react-aria/i18n";
 
 const SkeletonTwo = ({ docType }: { docType: string }) => {
-  const [groupSelected, setGroupSelected] = useState<string[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  
-  const specializationsData: SpecializationData = {
-    dentist: [
-      { key: "general-dentist", label: "General Dentist" },
-      { key: "orthodontist", label: "Orthodontist" },
-      { key: "pediatric-dentist", label: "Pediatric Dentist" },
-      { key: "periodontist", label: "Periodontist" },
-      { key: "cosmetic-dentist", label: "Cosmetic Dentist" },
-      { key: "oral-surgeon", label: "Oral Surgeon" },
-      { key: "prosthodontist", label: "Prosthodontist" },
-    ],
-    general: [
-      { key: "family-medicine", label: "Family Medicine" },
-      { key: "internal-medicine", label: "Internal Medicine" },
-      { key: "geriatric-medicine", label: "Geriatric Medicine" },
-      { key: "sports-medicine", label: "Sports Medicine" },
-      { key: "preventive-medicine", label: "Preventive Medicine" },
-      { key: "emergency-medicine", label: "Emergency Medicine" },
-      { key: "hospitalist", label: "Hospitalist" },
-    ],
-    pediatric: [
-      { key: "pediatric-cardiology", label: "Pediatric Cardiology" },
-      { key: "pediatric-neurology", label: "Pediatric Neurology" },
-      { key: "pediatric-oncology", label: "Pediatric Oncology" },
-      { key: "pediatric-endocrinology", label: "Pediatric Endocrinology" },
-      { key: "pediatric-gastroenterology", label: "Pediatric Gastroenterology" },
-      { key: "neonatology", label: "Neonatology" },
-      { key: "pediatric-pulmonology", label: "Pediatric Pulmonology" },
-    ],
-    ent: [
-      { key: "otolaryngology", label: "Otolaryngology" },
-      { key: "rhinology", label: "Rhinology" },
-      { key: "laryngology", label: "Laryngology" },
-      { key: "neurotology", label: "Neurotology" },
-      { key: "pediatric-ent", label: "Pediatric ENT" },
-      { key: "skull-base-surgery", label: "Skull Base Surgery" },
-      { key: "facial-plastic-surgery", label: "Facial Plastic Surgery" },
-    ],
+  const [selectedSpecialization, setSpecialization] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<DateValue>(
+    parseDate("2024-04-04")
+  );
+  const [selectedTime, setSelectedTime] = useState<string | undefined>(
+    undefined
+  );
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [timeSlots, setTimeSlots] = useState<any[]>([]); // Array of time slots
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{
+    time: string;
+    id: string | null;
+  }>({ time: "No time slot selected", id: null });
+  const [specializationsData, setSpecializationsData] =
+    useState<SpecializationData>({
+      dentist: [],
+      general: [],
+      pediatric: [],
+      ent: [],
+    });
+  const [selectedDoctor, setSelectedDoctor] = useState<string>("");
+
+  interface SpecializationEntry {
+    id: string;
+    label: string;
+  }
+
+  interface SpecializationData {
+    [key: string]: SpecializationEntry[];
+  }
+
+  const formatSpecializationsData = (data: any[]): SpecializationData => {
+    const formattedData: SpecializationData = {
+      dentist: [],
+      general: [],
+      pediatric: [],
+      ent: [],
+    };
+
+    data.forEach((item) => {
+      const entry: SpecializationEntry = {
+        id: item.specialization_id,
+        label: item.specialization_name,
+      };
+      switch (item.medical_field) {
+        case "Dentistry":
+          formattedData.dentist.push(entry);
+          break;
+        case "General Practice":
+          formattedData.general.push(entry);
+          break;
+        case "Pediatrics":
+          formattedData.pediatric.push(entry);
+          break;
+        case "ENT":
+          formattedData.ent.push(entry);
+          break;
+        default:
+          break;
+      }
+    });
+
+    return formattedData;
   };
+
+  useEffect(() => {
+    const fetchSpecializations = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/getSpecializations"
+        );
+        const data = await response.json();
+        const formattedSpecializations = formatSpecializationsData(data);
+        setSpecializationsData(formattedSpecializations);
+      } catch (error) {
+        console.error("Error fetching specializations:", error);
+      }
+    };
+
+    fetchSpecializations();
+  }, []);
 
   const specializations = specializationsData[docType] || [];
 
@@ -367,10 +426,84 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
 
   const fetchDoctors = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/doctors/active");
+      const response = await axios.get(
+        "http://localhost:5000/api/doctors/active"
+      );
       setDoctors(response.data.doctors);
     } catch (error) {
       console.error("Error fetching active doctors:", error);
+    }
+  };
+
+  const filteredDoctors = selectedSpecialization
+    ? doctors.filter(
+        (doctor) => doctor.specialization_id === selectedSpecialization
+      )
+    : doctors;
+
+  const handleSpecializationChange = (value: string) => {
+    console.log(value);
+    setSpecialization(value);
+  };
+
+  const handleTimeSlotSelected = (timeSlot: {
+    time: string;
+    id: string | null;
+  }) => {
+    setSelectedTimeSlot(timeSlot);
+    console.log(timeSlot);
+  };
+
+  const handleDoctorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    console.log(e.target.value);
+    setSelectedDoctor(e.target.value);
+    console.log(selectedDate);
+    console.log(
+      fetchAvailableSlots("60ec647b-7bd7-42c2-add9-0ff3843726dc", selectedDate)
+    );
+  };
+
+  const generateTimeSlots = (availableSlots: any[]) => {
+    const timeSlots = [];
+    let currentTime = 10;
+
+    for (let i = 0; i < 9; i++) {
+      const formattedTime = `${currentTime}:00 ${
+        currentTime < 12 ? "AM" : "PM"
+      }`;
+      currentTime = currentTime === 12 ? 13 : currentTime + 1;
+
+      const availableSlot = availableSlots.find(
+        (slot) => slot.start_time === `${formattedTime.split(" ")[0]}:00`
+      );
+
+      timeSlots.push({
+        time: formattedTime,
+        id: availableSlot ? availableSlot.slot_id : null,
+        isDisabled: !availableSlot,
+      });
+    }
+
+    return timeSlots;
+  };
+
+  const fetchAvailableSlots = async (doctorId: string, date: DateValue) => {
+    if (!doctorId || !date) return;
+    setLoading(true);
+    setErrorMessage("");
+
+    try {
+      const response = await getDates({ doctor_id: doctorId, date });
+      console.log("response", response);
+      if (response?.slots?.length > 0) {
+        setTimeSlots(generateTimeSlots(response.slots));
+      } else {
+        setErrorMessage(response?.message || "No available slots found.");
+      }
+    } catch (error) {
+      setErrorMessage("An error occurred while fetching available slots.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -390,9 +523,10 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
             className="bg-black bg-opacity-50 mt-0"
             size="lg"
             startContent={<IconStethoscope />}
+            onChange={(e) => handleSpecializationChange(e.target.value)}
           >
             {specializations.map((specialization) => (
-              <SelectItem key={specialization.key} value={specialization.key}>
+              <SelectItem key={specialization.id} value={specialization.id}>
                 {specialization.label}
               </SelectItem>
             ))}
@@ -402,7 +536,9 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
             label={<h2 className="text-lg text-white">Appointment Date</h2>}
             size="lg"
             variant="bordered"
+            onChange={setSelectedDate}
             className="bg-black bg-opacity-50"
+            minValue={today(getLocalTimeZone())}
           />
 
           <div className="relative">
@@ -422,59 +558,92 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
       </motion.div>
 
       <ModalBody>
-        <ModalContent className="min-w-[900px]">
+        <ModalContent className="">
           <h4 className="text-lg md:text-2xl text-neutral-600 dark:text-neutral-100 font-bold mb-8">
             Book your Appointment now!
           </h4>
 
-          <div className="flex flex-col gap-1 w-full">
-            <CheckboxGroup
-              label="Select Doctor"
-              value={groupSelected}
-              onChange={setGroupSelected}
-              color="success"
-              orientation="horizontal"
+          <div className="flex flex-col gap-3 ">
+            <Select
+              items={filteredDoctors}
+              label="Assigned to"
+              placeholder="Select a user"
+              labelPlacement="outside"
               classNames={{
-                base: "w-full",
-              
+                base: "max-w-xs",
+                trigger: "h-12",
+              }}
+              onChange={handleDoctorChange}
+              renderValue={(items: SelectedItems<Doctor>) => {
+                return items.map((doctor) =>
+                  doctor.data ? (
+                    <div key={doctor.key} className="flex items-center gap-2">
+                      <Avatar
+                        alt={`${doctor.data.first_name} ${doctor.data.last_name}`}
+                        className="flex-shrink-0"
+                        size="sm"
+                        src={
+                          getDoctorIcon(
+                            doctor.data.first_name,
+                            doctor.data.last_name
+                          ) as string
+                        }
+                      />
+                      <div className="flex flex-col">
+                        <span>{`${doctor.data.first_name} ${doctor.data.last_name}`}</span>
+                        <span className="text-default-500 text-tiny">
+                          (
+                          {"Experience: " +
+                            doctor.data.years_of_experience +
+                            " Years"}
+                          )
+                        </span>
+                      </div>
+                    </div>
+                  ) : null
+                );
               }}
             >
-              {doctors.map((doctor) => {
-                const doctorIcon = getDoctorIcon(doctor.first_name, doctor.last_name);
-                const doctorName = `${doctor.first_name} ${doctor.last_name}`;
-                return (
-                  <CustomCheckbox
-                    key={doctor.doctor_id}
-                    value={doctor.doctor_id}
-                    user={{
-                      name: doctorName,
-                      avatar: doctorIcon as string,
-                      username: '',
-                      url: "#",
-                      role: "Experience: "+ doctor.years_of_experience.toString() + " Years",
-                      status: doctor.status || "Active",
-                    }}
-                    statusColor="success"
-                  />
-                );
-              })}
-            </CheckboxGroup>
-            
-            {groupSelected.length > 0 && (
-              <div className="mt-4 ml-1 text-default-500">
-                <p>Selected Doctors:</p>
-                <ul className="list-disc ml-6">
-                  {groupSelected.map((doctorId) => {
-                    const doctor = doctors.find(d => d.doctor_id === doctorId);
-                    return doctor && (
-                      <li key={doctorId}>
-                        Dr. {doctor.first_name} {doctor.last_name} - {doctor.doctor_id}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
+              {(doctor) => (
+                <SelectItem
+                  key={doctor.doctor_id}
+                  textValue={`${doctor.first_name} ${doctor.last_name}`}
+                >
+                  <div className="flex gap-2 items-center">
+                    <Avatar
+                      alt={`${doctor.first_name} ${doctor.last_name}`}
+                      className="flex-shrink-0"
+                      size="sm"
+                      src={
+                        getDoctorIcon(
+                          doctor.first_name,
+                          doctor.last_name
+                        ) as string
+                      }
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-small">{`${doctor.first_name} ${doctor.last_name}`}</span>
+                      <span className="text-tiny text-default-400">
+                        {"Experience: " + doctor.years_of_experience + " Years"}
+                      </span>
+                    </div>
+                  </div>
+                </SelectItem>
+              )}
+            </Select>
+
+            <AvailableTimeSlots
+              timeSlots={timeSlots}
+              selectedTimeSlot={selectedTimeSlot}
+              onTimeSlotSelected={handleTimeSlotSelected}
+            />
+            <Textarea
+              // key={variant}
+              variant={"underlined"}
+              label="Reason"
+              labelPlacement="outside"
+              placeholder="Enter your Reason"
+            />
           </div>
         </ModalContent>
         <ModalFooter className="gap-4">
@@ -489,7 +658,6 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
     </Modal>
   );
 };
-
 
 type Request = {
   request_id: string;
@@ -511,6 +679,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import NotificationsModal from "@/components/notifiction";
 import axios from "axios";
+import AvailableTimeSlots from "@/components/AvailableTimeSlots";
 
 const SkeletonFour = () => {
   const [requests, setRequests] = useState<Request[]>([]);
@@ -545,7 +714,7 @@ const SkeletonFour = () => {
           );
           return hasChanged ? newData : prev;
         });
-        console.log("newData", newData);
+        // console.log("newData", newData);
       } else {
         setError("No requests found");
         setRequests([]);
@@ -745,8 +914,7 @@ const SkeletonFour = () => {
                       </CardContent>
                     </Card>
                   </TooltipTrigger>
-                  <TooltipContent>
-                  </TooltipContent>
+                  <TooltipContent></TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </motion.div>
