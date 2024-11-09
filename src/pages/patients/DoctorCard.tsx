@@ -1,4 +1,4 @@
-import { Checkbox, Link, User, Chip, cn } from "@nextui-org/react";
+import { Checkbox, User, Chip, cn } from "@nextui-org/react";
 
 interface UserProps {
   name: string;

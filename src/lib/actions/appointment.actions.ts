@@ -38,7 +38,7 @@ export const createAppointment = async (appointmentData: {
   userId: string | null;
   patient: string| null;
   primaryPhysician: string;
-  schedule: DateValue; // Expecting a Date object
+  schedule: Date; // Expecting a Date object
   timeSlot: string | null;
   reason: string;
 }) => {

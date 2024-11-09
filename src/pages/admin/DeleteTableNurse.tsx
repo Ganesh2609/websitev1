@@ -12,7 +12,7 @@ import {
 } from "@nextui-org/react";
 import { DeleteIcon } from "./DeleteIcon";
 
-const DeleteTableNurse = ({ nurses, onDelete }) => {
+const DeleteTableNurse = ({ nurses, onDelete } : any) => {
   // Pagination state
   const [page, setPage] = React.useState(1);
   const rowsPerPage = 5; // You can make this configurable if needed
@@ -25,7 +25,7 @@ const DeleteTableNurse = ({ nurses, onDelete }) => {
     return nurses.slice(start, end);
   }, [page, nurses]);
 
-  const renderCell = (nurse, columnKey) => {
+  const renderCell = (nurse:any, columnKey:any) => {
     const cellValue = nurse[columnKey];
     switch (columnKey) {
       case "name":
@@ -129,7 +129,7 @@ const DeleteTableNurse = ({ nurses, onDelete }) => {
         <TableColumn>Actions</TableColumn>
       </TableHeader>
       <TableBody>
-        {items.map((nurse) => (
+        {items.map((nurse:any) => (
           <TableRow key={nurse.nurse_id}>
             <TableCell>{renderCell(nurse, "name")}</TableCell>
             <TableCell>{renderCell(nurse, "specialization")}</TableCell>

@@ -1,9 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-
 import { Appointment } from "@/types/types";
-
 import { StatusBadge } from "@/components/StatusBadge";
 
 import { getProperDate } from "@/lib/utils";

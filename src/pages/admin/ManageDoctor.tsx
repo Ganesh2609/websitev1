@@ -26,7 +26,7 @@ const ManageDoctor = () => {
 
 
 
-  const handleDelete = useCallback(async (doctorId) => {
+  const handleDelete = useCallback(async (doctorId:any) => {
     try {
       const response = await fetch(`http://localhost:5000/api/deleteDoctor/${doctorId}`, {
         method: 'DELETE',
@@ -36,7 +36,7 @@ const ManageDoctor = () => {
         throw new Error(`Failed to delete doctor with ID: ${doctorId}`);
       }
 
-      setDoctors((prevDoctors) => prevDoctors.filter((doc) => doc.doctor_id !== doctorId));
+      setDoctors((prevDoctors) => prevDoctors.filter((doc:any) => doc.doctor_id !== doctorId));
       
     } catch (error) {
       console.error('Error deleting doctor:', error);

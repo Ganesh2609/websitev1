@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Modal,
   ModalBody,
@@ -15,7 +15,6 @@ import { Appointment } from "@/types/types";
 const CancelAppointment = ({
   appointment,
   onAppointmentCancel,
-  onReviewSubmit,
 }: {
   appointment: Appointment;
   onAppointmentCancel: () => void;
@@ -26,12 +25,6 @@ const CancelAppointment = ({
   const [error, setError] = useState<string | null>(null);
   const [rating, setRating] = useState<number>(0);
   const [review, setReview] = useState<string>("");
-
-  // Function to close the modal after an action is completed
-  const closeModal = () => {
-    const closeModalTrigger = document.querySelector(".modal-close-button");
-    closeModalTrigger?.click();
-  };
 
   const handleCancel = async () => {
     try {
@@ -57,11 +50,10 @@ const CancelAppointment = ({
         throw new Error(errorData.message || "Failed to cancel appointment");
       }
 
-      const data = await response.json();
+      await response.json();
       alert("Appointment cancelled successfully!");
       onAppointmentCancel();
-      closeModal();  // Close the modal after cancelling
-    } catch (err) {
+    } catch (err:any) {
       setError(err.message);
       console.error("Error cancelling appointment:", err);
     } finally {
@@ -93,10 +85,9 @@ const CancelAppointment = ({
         throw new Error(errorData.message || "Failed to submit review");
       }
 
-      const data = await response.json();
+      await response.json();
       alert("Review submitted successfully!");
-      closeModal();  // Close the modal after submitting review
-    } catch (err) {
+    } catch (err:any) {
       setError(err.message || "An error occurred while submitting the review");
       console.error("Error submitting review:", err);
     }

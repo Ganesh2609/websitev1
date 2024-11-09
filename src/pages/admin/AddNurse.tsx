@@ -16,7 +16,8 @@ export default function AddNurse() {
   
   const [errorMessage, setErrorMessage] = useState("");
 
-  const [doctors, setDoctors] = useState("");
+  const [doctors, setDoctors] = useState([]);
+
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -34,7 +35,7 @@ export default function AddNurse() {
   }, []);
   
   // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e:any) => {
     e.preventDefault();
     
     const nurseData = {
@@ -175,7 +176,7 @@ export default function AddNurse() {
                       onChange={(e) => setAssignedDoctor(e.target.value)}
                     >
                       <option value="" disabled>select a doctor to assign the nurse to</option>
-                      {doctors.map((doc) => (
+                      {doctors.map((doc:any) => (
                         <option key={doc.doctor_id} value={doc.doctor_id}>
                           {doc.first_name} {doc.last_name}
                         </option>

@@ -58,9 +58,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { NCard, NCardBody, RadioGroup } from "@nextui-org/react";
-
-import { Tabs, Tab, Chip } from "@nextui-org/react";
+import { Tabs, Tab, } from "@nextui-org/react";
 
 const PatientHome = () => {
   const [appointments, setAppointments] = useState<AppointmentsState>({
@@ -69,8 +67,6 @@ const PatientHome = () => {
     pendingCount: 0,
     cancelledCount: 0,
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [doctype, setdoctype] = useState<string>("general");
 
   useEffect(() => {
@@ -98,12 +94,9 @@ const PatientHome = () => {
         }
       } catch (err) {
         if (err instanceof Error) {
-          setError(err.message);
         } else {
-          setError("An unknown error occurred");
         }
       } finally {
-        setLoading(false);
       }
     };
   
@@ -349,8 +342,6 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
     parseDate("2024-04-04")
   );
 
-  const [loading, setLoading] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>("");
   const [timeSlots, setTimeSlots] = useState<any[]>([]); // Array of time slots
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{
     time: string;
@@ -497,8 +488,6 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
 
   const fetchAvailableSlots = async (doctorId: string, date: DateValue) => {
     if (!doctorId || !date) return;
-    setLoading(true);
-    setErrorMessage("");
 
     try {
       const response = await getDates({ doctor_id: doctorId, date });
@@ -506,21 +495,12 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
       if (response?.slots?.length > 0) {
         setTimeSlots(generateTimeSlots(response.slots));
       } else {
-        setErrorMessage(response?.message || "No available slots found.");
       }
     } catch (error) {
-      setErrorMessage("An error occurred while fetching available slots.");
     } finally {
-      setLoading(false);
     }
   };
   
-
-  const closeModal = () => {
-    const closeModalTrigger = document.querySelector(".modal-close-button");
-    closeModalTrigger?.click();
-  };
-
   const handleBookAppointment = async () => {
     try {
       const appointmentData = {
@@ -534,8 +514,6 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
       console.log(appointmentData);
 
       await createAppointment(appointmentData);
-      // Handle success, such as showing a success message or redirecting the user
-      closeModal(); 
     } catch (error) {
       // Handle error, such as displaying an error message to the user
       console.error("Error creating appointment:", error);
@@ -716,7 +694,6 @@ type Request = {
 import { Clock, Calendar, User2, Stethoscope } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
 import NotificationsModal from "@/components/notifiction";
 import axios from "axios";
 import AvailableTimeSlots from "@/components/AvailableTimeSlots";
@@ -726,13 +703,11 @@ const SkeletonFour = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [patientId, setpatientId] = useState<string | null>(null);
-  const [processingId, setProcessingId] = useState<string | null>(null);
-  const { toast } = useToast();
-
+  const processingId: string | null = null;
 
   const [cancellationReason, setCancellationReason] = useState("");
 
-  const handleAppointmentRequestCancel = async (request_id) => {
+  const handleAppointmentRequestCancel = async (request_id:any) => {
     try {
       const response = await fetch(
         `http://localhost:5000/api/appointmentRequests/cancel`,
@@ -753,9 +728,9 @@ const SkeletonFour = () => {
         throw new Error(errorData.message || "Failed to cancel appointment");
       }
 
-      const data = await response.json();
+      await response.json();
       alert("Appointment request cancelled successfully!");
-    } catch (err) {
+    } catch (err:any) {
       setError(err.message);
       console.error("Error cancelling appointment request:", err);
     }
@@ -828,55 +803,6 @@ const SkeletonFour = () => {
     return () => clearInterval(pollInterval);
   }, [patientId]);
 
-  const handleAppointmentAction = async (
-    requestId: string,
-    action: "approve" | "reject"
-  ) => {
-    setProcessingId(requestId);
-    try {
-      const endpoint =
-        action === "approve"
-          ? "http://localhost:5000/api/appointments/approve"
-          : "http://localhost:5000/api/appointments/reject";
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          requestId,
-          patientId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to ${action} appointment`);
-      }
-
-      // Update local state
-      setRequests((prevRequests) =>
-        prevRequests.filter((request) => request.request_id !== requestId)
-      );
-
-      // Show success notification
-      toast({
-        title: `Appointment ${action === "approve" ? "Booked" : "Rejected"}`,
-        description: `Successfully ${
-          action === "approve" ? "booked" : "rejected"
-        } the appointment request.`,
-        variant: action === "approve" ? "default" : "destructive",
-      });
-    } catch (err) {
-      console.error(`Error ${action}ing appointment:`, err);
-      toast({
-        title: "Error",
-        description: `Failed to ${action} appointment. Please try again.`,
-        variant: "destructive",
-      });
-    } finally {
-      setProcessingId(null);
-    }
-  };
 
   const cardVariants = {
     initial: { opacity: 0, y: 20 },
@@ -1038,7 +964,7 @@ const SkeletonFour = () => {
                   </label>
                   <textarea
                     id="cancellationReason"
-                    rows="8"
+                    rows={8}
                     className="w-full border border-neutral-300 dark:border-neutral-700 rounded-md p-3 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
                     placeholder="Enter your reason here..."
                     onChange={(e) => setCancellationReason(e.target.value)}

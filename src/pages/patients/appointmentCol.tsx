@@ -1,13 +1,11 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-
 import { Appointment } from "@/types/types";
-
 import { StatusBadge } from "@/components/StatusBadge";
 
 import { getProperDate } from "@/lib/utils";
-import AppointmentActions from "@/pages/patients/AppintmentActions";
+import AppointmentActions from "../doctors/AppintmentActions";
 
 export const columns: ColumnDef<Appointment>[] = [
   {
@@ -74,12 +72,7 @@ export const columns: ColumnDef<Appointment>[] = [
 
       return (
         <div className="flex gap-1">
-          <AppointmentActions
-            appointment={appointment}
-            onAppointmentComplete={(updatedData) => {
-              // Update your table data here
-            }}
-          />
+          <AppointmentActions appointment={appointment} />
         </div>
       );
     },
