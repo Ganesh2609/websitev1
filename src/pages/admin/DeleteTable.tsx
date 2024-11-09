@@ -10,7 +10,6 @@ import {
   Button,
   Pagination
 } from "@nextui-org/react";
-import { EditIcon } from "./EditIcon";
 import { DeleteIcon } from "./DeleteIcon";
 
 const DeleteTable = ({ doctors, onDelete }) => {

@@ -6,14 +6,6 @@ import { Appointment } from "@/types/types";
 
 import { StatusBadge } from "@/components/StatusBadge";
 
-import {
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalTrigger,
-} from "@/components/aceternity/animated-modal";
-import { motion } from "framer-motion";
 import { getProperDate } from "@/lib/utils";
 import AppointmentActions from "@/pages/patients/AppintmentActions";
 

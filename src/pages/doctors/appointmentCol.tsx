@@ -6,16 +6,8 @@ import { Appointment } from "@/types/types";
 
 import { StatusBadge } from "@/components/StatusBadge";
 
-import {
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalTrigger,
-} from "@/components/aceternity/animated-modal";
-import { motion } from "framer-motion";
 import { getProperDate } from "@/lib/utils";
-import AppointmentActions from "@/components/AppintmentActions";
+import AppointmentActions from "@/pages/doctors/AppintmentActions";
 
 export const columns: ColumnDef<Appointment>[] = [
   {
@@ -82,12 +74,7 @@ export const columns: ColumnDef<Appointment>[] = [
 
       return (
         <div className="flex gap-1">
-          <AppointmentActions
-            appointment={appointment}
-            onAppointmentComplete={(updatedData) => {
-              // Update your table data here
-            }}
-          />
+          <AppointmentActions appointment={appointment} />
         </div>
       );
     },

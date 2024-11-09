@@ -1,6 +1,5 @@
 import clsx from "clsx";
 
-import { StatusIcon } from "@/constants";
 import { Status } from "@/types/types";
 
 export const StatusBadge = ({ status }: { status: Status }) => {

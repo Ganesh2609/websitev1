@@ -10,13 +10,6 @@ interface SearchIconProps extends React.SVGProps<SVGSVGElement> {
 }
 
 export const SearchIcon: React.FC<SearchIconProps> = ({
-  fill = "currentColor",
-  filled,
-  size,
-  height,
-  width,
-  label,
-  ...props
 }) => {
   return (
     <svg

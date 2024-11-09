@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -19,7 +19,7 @@ const statusColorMap = {
   vacation: "warning",
 };
 
-const INITIAL_VISIBLE_COLUMNS = ["patient_name", "doctor_name", "date_time", "reason", "urgency_level", "actions"];
+// const INITIAL_VISIBLE_COLUMNS = ["patient_name", "doctor_name", "date_time", "reason", "urgency_level", "actions"];
 
 type AppointmentRequest = {
   request_id: number;

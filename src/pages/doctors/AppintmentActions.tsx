@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Modal,
   ModalBody,
@@ -13,7 +13,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Check, AlertCircle, Plus, Trash2 } from "lucide-react";
 import { Appointment } from "@/types/types";
-// import { API_BASE_URL } from '@/config';
 
 type Treatment = {
   procedureName: string;
@@ -21,13 +20,7 @@ type Treatment = {
   cost: string;
 };
 
-const AppointmentActions = ({
-  appointment,
-  onAppointmentComplete,
-}: {
-  appointment: Appointment;
-  onAppointmentComplete: () => void;
-}) => {
+const AppointmentActions = ({ appointment }: { appointment: Appointment }) => {
   const [doctorNotes, setDoctorNotes] = useState("");
   const [billingAmount, setBillingAmount] = useState("");
   const [treatments, setTreatments] = useState<Treatment[]>([
@@ -81,7 +74,6 @@ const AppointmentActions = ({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            // 'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
           body: JSON.stringify({
             doctorNotes,
@@ -100,11 +92,13 @@ const AppointmentActions = ({
         throw new Error(errorData.message || "Failed to complete appointment");
       }
 
-      const data = await response.json();
-      // onAppointmentComplete(data);
       alert("Appointment completed successfully!");
     } catch (err) {
-      setError(err.message);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred");
+      }
       console.error("Error completing appointment:", err);
     } finally {
       setLoading(false);
