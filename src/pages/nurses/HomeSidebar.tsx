@@ -9,7 +9,6 @@ import {
   MessageCircleQuestion,
   Search,
   Settings2,
-  Sparkles,
   Trash2,
   LayoutDashboard
 } from "lucide-react"

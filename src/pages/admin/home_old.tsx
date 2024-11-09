@@ -31,7 +31,7 @@ const AdminPage = () => {
       try {
         const data = await getRecentAppointments(); 
         const updatedAppointments = await Promise.all(
-          data.appointments.map(async (appointment): Promise<Appointment> => {
+          data.appointments.map(async (appointment:any): Promise<Appointment> => {
             const doctorData = await getDoctor(appointment.doctor_id);
             const patientData = await getPatient(appointment.patient_id);
             const date = await getRequestDate(appointment.request_id);

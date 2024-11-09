@@ -1,21 +1,10 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-
 import { Appointment } from "@/types/types";
-
 import { StatusBadge } from "@/components/StatusBadge";
-
-import {
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalTrigger,
-} from "@/components/aceternity/animated-modal";
-import { motion } from "framer-motion";
 import { getProperDate } from "@/lib/utils";
-import AppointmentActions from "@/components/AppintmentActions";
+
 
 export const columns: ColumnDef<Appointment>[] = [
   {
@@ -73,23 +62,5 @@ export const columns: ColumnDef<Appointment>[] = [
         </div>
       );
     },
-  },
-  {
-    id: "actions",
-    header: () => <div className="pl-4">Actions</div>,
-    cell: ({ row }) => {
-      const appointment = row.original;
-
-      return (
-        <div className="flex gap-1">
-          <AppointmentActions
-            appointment={appointment}
-            onAppointmentComplete={(updatedData) => {
-              // Update your table data here
-            }}
-          />
-        </div>
-      );
-    },
-  },
+  }
 ];

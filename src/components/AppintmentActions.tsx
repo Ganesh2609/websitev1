@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Modal,
   ModalBody,
@@ -23,7 +23,6 @@ type Treatment = {
 
 const AppointmentActions = ({
   appointment,
-  onAppointmentComplete,
 }: {
   appointment: Appointment;
   onAppointmentComplete: () => void;
@@ -100,10 +99,10 @@ const AppointmentActions = ({
         throw new Error(errorData.message || "Failed to complete appointment");
       }
 
-      const data = await response.json();
+      await response.json();
       // onAppointmentComplete(data);
       alert("Appointment completed successfully!");
-    } catch (err) {
+    } catch (err:any) {
       setError(err.message);
       console.error("Error completing appointment:", err);
     } finally {

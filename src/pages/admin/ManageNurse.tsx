@@ -26,7 +26,7 @@ const ManageNurse = () => {
 
 
 
-  const handleDelete = useCallback(async (nurseId) => {
+  const handleDelete = useCallback(async (nurseId:any) => {
     try {
       const response = await fetch(`http://localhost:5000/api/deleteNurse/${nurseId}`, {
         method: 'DELETE',
@@ -36,7 +36,7 @@ const ManageNurse = () => {
         throw new Error(`Failed to delete doctor with ID: ${nurseId}`);
       }
 
-      setNurses((prevNurses) => prevNurses.filter((nur) => nur.nurse_id !== nurseId));
+      setNurses((prevNurses) => prevNurses.filter((nur:any) => nur.nurse_id !== nurseId));
       
     } catch (error) {
       console.error('Error deleting nurse:', error);

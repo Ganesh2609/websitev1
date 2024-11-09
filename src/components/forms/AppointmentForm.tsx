@@ -25,27 +25,24 @@ import {
   Button,
   useDisclosure,
   Chip,
-  Image,
 } from "@nextui-org/react";
 import { RadioButtonGroup } from "@/components/RadioButtonGroup";
 import { Doctors } from "@/constants";
+import {DateValue} from "@internationalized/date";
 
 export const AppointmentForm = ({
   userId,
   patientId,
-  setOpen,
 }: {
-  userId: string | undefined;
-  patientId: string | undefined;
+  userId: string | null;
+  patientId: string | null;
   setOpen?: Dispatch<SetStateAction<boolean>>;
 }) => {
   const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<DateValue | null>(null);
   const [doctorId, setDoctorId] = useState<string>("");
-  const [availableSlots, setAvailableSlots] = useState<any[]>([]); // Adjust to proper type
-  const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [doctors, setDoctors] = useState<Doctor[]>([]); // Store the list of active doctors
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -93,16 +90,13 @@ export const AppointmentForm = ({
   };
 
   // Fetch available slots based on selected doctor and date
-  const fetchAvailableSlots = async (doctorId: string, date: Date | null) => {
+  const fetchAvailableSlots = async (doctorId: string, date: DateValue | null) => {
     if (!doctorId || !date) return;
-    setLoading(true);
     setErrorMessage("");
-    setAvailableSlots([]);
 
     try {
       const response = await getDates({ doctor_id: doctorId, date });
       if (response?.slots?.length > 0) {
-        setAvailableSlots(response.slots);
         setTimeSlots(generateTimeSlots(response.slots)); // Use response.slots directly
       } else {
         setErrorMessage(response?.message || "No available slots found.");
@@ -110,7 +104,6 @@ export const AppointmentForm = ({
     } catch (error) {
       setErrorMessage("An error occurred while fetching available slots.");
     } finally {
-      setLoading(false);
     }
   };
 
@@ -130,11 +123,11 @@ export const AppointmentForm = ({
     fetchDoctors();
   }, []);
 
-  const handleDateOrDoctorChange = (doctorId: string, date: Date | null) => {
+  const handleDateOrDoctorChange = (doctorId: string, date: DateValue | null) => {
     if (doctorId && date) fetchAvailableSlots(doctorId, date);
   };
 
-  const handleDateChange = (date: Date | null) => {
+  const handleDateChange = (date: DateValue | null) => {
     setSelectedDate(date);
     handleDateOrDoctorChange(doctorId, date);
   };

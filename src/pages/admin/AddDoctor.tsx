@@ -34,7 +34,7 @@ export default function AddDoctor() {
   }, []);
   
   // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e:any) => {
     e.preventDefault();
     
     const doctorData = {
@@ -176,7 +176,7 @@ export default function AddDoctor() {
                       onChange={(e) => setSpecializationId(e.target.value)}
                     >
                       <option value="" disabled>select a specialization</option>
-                      {specializations.map((spec) => (
+                      {specializations.map((spec: any) => (
                         <option key={spec.specialization_id} value={spec.specialization_id}>
                           {spec.specialization_name}
                         </option>

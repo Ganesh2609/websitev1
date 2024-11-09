@@ -63,8 +63,6 @@ const DoctorHome = () => {
     pendingCount: 2,
     cancelledCount: 0,
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const doctorId = localStorage.getItem("doctor_id");
@@ -91,12 +89,9 @@ const DoctorHome = () => {
         }
       } catch (err) {
         if (err instanceof Error) {
-          setError(err.message);
         } else {
-          setError("An unknown error occurred");
         }
       } finally {
-        setLoading(false);
       }
     };
   
@@ -230,36 +225,6 @@ const DoctorHome = () => {
 
 export default DoctorHome;
 
-const SkeletonTwo = () => {
-  const variants = {
-    initial: {
-      width: 0,
-    },
-    animate: {
-      width: "100%",
-      transition: {
-        duration: 0.2,
-      },
-    },
-    hover: {
-      width: ["0%", "100%"],
-      transition: {
-        duration: 2,
-      },
-    },
-  };
-  const arr = new Array(6).fill(0);
-  return (
-    <motion.div
-      initial="initial"
-      animate="animate"
-      whileHover="hover"
-      className="flex flex-1 w-full h-full min-h-[6rem] dark:bg-dot-white/[0.2] bg-dot-black/[0.2] flex-col space-y-2"
-    >
-      {/* <DataTable columns={columns} data={appointments} /> */}
-    </motion.div>
-  );
-};
 
 type Request = {
   request_id: string;
@@ -652,14 +617,3 @@ const SkeletonFour = () => {
     </motion.div>
   );
 };
-
-const items = [
-  {
-    title: "Appionment Requests",
-    description: <span className="text-sm"></span>,
-    header: <SkeletonFour />,
-    className: "md:col-span-4 min-w-[400px]",
-    icon: <IconTableColumn className="h-4 w-4 text-neutral-500" />,
-    child: <div></div>,
-  },
-];

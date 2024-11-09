@@ -1,6 +1,6 @@
 import { Tabs, Tab } from "@nextui-org/react";
 import { Stethoscope, Cable } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function NavbarAdmin() {
   // Get initial selected from URL path or default to "doctor"

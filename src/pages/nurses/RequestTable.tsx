@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -11,15 +11,16 @@ import {
   Pagination,
   Input,
 } from "@nextui-org/react";
-import { SearchIcon } from "@/pages/nurses/SearchIcon";
+import { SearchIcon } from "@/pages/nurses/SearchIcon.tsx";
 
-const statusColorMap = {
+type Status = "active" | "paused" | "vacation";
+type Status2 = "success" | "danger" | "warning";
+
+const statusColorMap: Record<Status, Status2> = {
   active: "success",
   paused: "danger",
   vacation: "warning",
 };
-
-const INITIAL_VISIBLE_COLUMNS = ["patient_name", "doctor_name", "date_time", "reason", "urgency_level", "actions"];
 
 type AppointmentRequest = {
   request_id: number;
@@ -29,14 +30,14 @@ type AppointmentRequest = {
   day_of_week: string;
   start_time: string;
   reason: string;
-  urgency_level: string;
+  urgency_level: Status;
 };
 
-export default function RequestTable({ nurseId }: { nurseId: string }) {
+export default function RequestTable() {
   const [filterValue, setFilterValue] = useState("");
   const [appointmentRequests, setAppointmentRequests] = useState<AppointmentRequest[]>([]);
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const rowsPerPage = 10;
   const [totalPages, setTotalPages] = useState(1);
 
   // Fetch appointment requests when the nurseId changes
@@ -64,7 +65,7 @@ export default function RequestTable({ nurseId }: { nurseId: string }) {
     const intervalId = setInterval(fetchAppointmentRequests, 2000);
     return () => clearInterval(intervalId);
     
-  }, [nurseId, rowsPerPage]);
+  }, [rowsPerPage]);
 
   const filteredItems = appointmentRequests.filter((request) =>
     request.patient_name.toLowerCase().includes(filterValue.toLowerCase())
@@ -72,9 +73,9 @@ export default function RequestTable({ nurseId }: { nurseId: string }) {
 
   const paginatedItems = filteredItems.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
-  const handleAccept = async (requestId) => {
+  const handleAccept = async (requestId:any) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/nurseAcceptAppointmentRequest/${requestId}`, {
+      await fetch(`http://localhost:5000/api/nurseAcceptAppointmentRequest/${requestId}`, {
         method: 'POST',
       });
       
@@ -83,9 +84,9 @@ export default function RequestTable({ nurseId }: { nurseId: string }) {
     }
   }
 
-  const handleReject = async (requestId) => {
+  const handleReject = async (requestId:any) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/nurseRejectAppointmentRequest/${requestId}`, {
+      await fetch(`http://localhost:5000/api/nurseRejectAppointmentRequest/${requestId}`, {
         method: 'POST',
       });
 
@@ -95,7 +96,7 @@ export default function RequestTable({ nurseId }: { nurseId: string }) {
   }
 
 
-  const formatDate = (dateString, startTime) => {
+  const formatDate = (dateString:any, startTime:any) => {
     const date = new Date(dateString); // The full date string including the date and time
     const dayOfWeek = date.toLocaleString('en-US', { weekday: 'long' }); // Get the day of the week
     const formattedDate = date.toLocaleDateString('en-US', {
