@@ -148,7 +148,6 @@ module.exports = {
   plugins: [
     nextui(),
     require("tailwindcss-animate"),
-    require("daisyui"),
     function ({ matchUtilities, theme }) {
       matchUtilities(
         {

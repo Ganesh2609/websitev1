@@ -5,8 +5,6 @@ import dotenv from "dotenv";
 import cors from "cors";
 import pkg from "pg";
 import multer from "multer";
-import { request } from "http";
-import { useDateFormatter } from "@react-aria/i18n";
 
 const { json } = pkg1;
 const { Pool } = pkg;
@@ -16,22 +14,22 @@ const app = express();
 const port = 5000;
 
 // PostgreSQL connection pool
-// const pool = new Pool({
-//   user: process.env.DB_USER, // Your PostgreSQL username
-//   host: process.env.DB_HOST,
-//   database: process.env.DB_NAME, // The name of your database
-//   password: process.env.DB_PASSWORD, // Your PostgreSQL password
-//   port: process.env.DB_PORT || 5432, // Default PostgreSQL port
-// });
+const pool = new Pool({
+  user: process.env.DB_USER, // Your PostgreSQL username
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME, // The name of your database
+  password: process.env.DB_PASSWORD, // Your PostgreSQL password
+  port: process.env.DB_PORT || 5432, // Default PostgreSQL port
+});
 
 // PostgreSQL connection pool
-const pool = new Pool({
-  user: process.env.AZURE_POSTGRESQL_USER, // Your PostgreSQL username
-  host: process.env.AZURE_POSTGRESQL_HOST,
-  database: process.env.AZURE_POSTGRESQL_DATABASE, // The name of your database
-  password: process.env.AZURE_POSTGRESQL_PASSWORD, // Your PostgreSQL password
-  port: process.env.AZURE_POSTGRESQL_PORT || 5432, // Default PostgreSQL port
-});
+// const pool = new Pool({
+//   user: process.env.AZURE_POSTGRESQL_USER, // Your PostgreSQL username
+//   host: process.env.AZURE_POSTGRESQL_HOST,
+//   database: process.env.AZURE_POSTGRESQL_DATABASE, // The name of your database
+//   password: process.env.AZURE_POSTGRESQL_PASSWORD, // Your PostgreSQL password
+//   port: process.env.AZURE_POSTGRESQL_PORT || 5432, // Default PostgreSQL port
+// });
 // Middleware
 app.use(cors());
 app.use(json());
