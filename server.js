@@ -8,30 +8,28 @@ import multer from "multer";
 import { request } from "http";
 import { useDateFormatter } from "@react-aria/i18n";
 
+
+dotenv.config();
+
+import { TextAnalyticsClient, AzureKeyCredential } from "@azure/ai-text-analytics";
+const client = new TextAnalyticsClient(process.env.AZURE_ENDPOINT, new AzureKeyCredential(process.env.AZURE_API_KEY));
+
+
 const { json } = pkg1;
 const { Pool } = pkg;
-dotenv.config();
 
 const app = express();
 const port = 5000;
 
 // PostgreSQL connection pool
-// const pool = new Pool({
-//   user: process.env.DB_USER, // Your PostgreSQL username
-//   host: process.env.DB_HOST,
-//   database: process.env.DB_NAME, // The name of your database
-//   password: process.env.DB_PASSWORD, // Your PostgreSQL password
-//   port: process.env.DB_PORT || 5432, // Default PostgreSQL port
-// });
-
-// PostgreSQL connection pool
 const pool = new Pool({
-  user: process.env.AZURE_POSTGRESQL_USER, // Your PostgreSQL username
-  host: process.env.AZURE_POSTGRESQL_HOST,
-  database: process.env.AZURE_POSTGRESQL_DATABASE, // The name of your database
-  password: process.env.AZURE_POSTGRESQL_PASSWORD, // Your PostgreSQL password
-  port: process.env.AZURE_POSTGRESQL_PORT || 5432, // Default PostgreSQL port
+  user: process.env.DB_USER, // Your PostgreSQL username
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME, // The name of your database
+  password: process.env.DB_PASSWORD, // Your PostgreSQL password
+  port: process.env.DB_PORT || 5432, // Default PostgreSQL port
 });
+
 // Middleware
 app.use(cors());
 app.use(json());
@@ -1538,18 +1536,21 @@ app.post("/api/appointments/:appointmentId/review", async (req, res) => {
       return res.status(404).json({ message: "Appointment not found." });
     }
 
-    console.log(result1)
-
-    // Insert the review into the database
+    
+    const result = await client.analyzeSentiment([feedback]);
+    const sentimentResult = result[0]["sentiment"]
+    console.log(sentimentResult)
+    
     await pool.query(
-      `INSERT INTO reviews (appointment_id, patient_id, doctor_id, rating, feedback) 
-       VALUES ($1, $2, $3, $4, $5)`,
+      `INSERT INTO reviews (appointment_id, patient_id, doctor_id, rating, feedback, sentiment) 
+       VALUES ($1, $2, $3, $4, $5, $6)`,
       [
         appointmentId,
         result1.rows[0].patient_id,
         result1.rows[0].doctor_id,
         rating,
         feedback,
+        sentimentResult
       ]
     );
 
@@ -1589,7 +1590,6 @@ app.post("/api/appointmentRequests/cancel", async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
 
 
 

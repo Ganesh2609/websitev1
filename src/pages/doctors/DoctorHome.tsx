@@ -56,6 +56,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+
+import DoctorReview from "@/pages/doctors/DoctorReview";
+
+
 const DoctorHome = () => {
   const [appointments, setAppointments] = useState<AppointmentsState>({
     appointments: [],
