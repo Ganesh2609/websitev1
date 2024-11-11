@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -25,10 +25,10 @@ jobs:
           npm run test --if-present
         working-directory: ./client  # Change to the client folder
       
-      - name: Zip the client folder for deployment (Windows)
+      - name: Zip the client folder for deployment (Linux)
         run: |
-          Compress-Archive -Path './client/*' -DestinationPath './client.zip'
-        shell: pwsh  # Use PowerShell to run the compression command
+          zip -r client.zip ./client/*
+        shell: bash  # Use bash to run the compression command
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -54,9 +54,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_EE06B25B7FA2432285D9AB5CA74D2F31 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_52503BC1172545D78B216D2870DB5AEA }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9C14131A23094A529D407F2007B9C0B1 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_01BFB4D88AD34BE2A403801E5F7A53E1 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2DB30484DBBA4A259E692A3CD0395646 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_222CD23AC35D42339BFADFAED208B693 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
