@@ -56,6 +56,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+
+import DoctorReview from '@/pages/doctors/DoctorReview';
+
 const DoctorHome = () => {
   const [appointments, setAppointments] = useState<AppointmentsState>({
     appointments: [],
@@ -186,6 +189,7 @@ const DoctorHome = () => {
           </div>
 
           <div className="flex flex-1 flex-row gap-4 p-4">
+
             <div
               className={cn(
                 "rounded-xl hover:shadow-xl transition max-h-[350px] duration-200 shadow-input dark:shadow-none p-4 dark:bg-black dark:border-white/[0.2] bg-white border border-transparent justify-between space-y-4 max-w-[1200px]  "
@@ -207,6 +211,7 @@ const DoctorHome = () => {
                 ></DataTable>
               }
             </div>
+            
             <BentoGridItem
               key={1}
               title={"Appionment Requests"}
@@ -218,7 +223,13 @@ const DoctorHome = () => {
               )}
               icon={<IconTableColumn className="h-4 w-4 text-neutral-500" />}
             />
+
           </div>
+
+          <div className="p-4 max-w-md mx-auto bg-black rounded-lg shadow-md my-5">
+            <DoctorReview />
+          </div>
+          
         </div>
 
         <Toaster />

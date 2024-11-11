@@ -335,6 +335,20 @@ import {
   today,
 } from "@internationalized/date";
 
+
+interface Review {
+  fname: string;
+  lname: string;
+  feedback: string;
+}
+
+interface Reviews {
+  positive: Review[];
+  neutral: Review[];
+  negative: Review[];
+}
+
+
 const SkeletonTwo = ({ docType }: { docType: string }) => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [selectedSpecialization, setSpecialization] = useState<string>("");
@@ -520,6 +534,37 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
     }
   };
 
+
+  const [reviews, setReviews] = useState<Reviews>({
+    positive: [],
+    neutral: [],
+    negative: []
+  });
+
+  const getReviews = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/review/${selectedDoctor}`);
+      if (response.ok) {
+        const result: Reviews = await response.json();
+        console.log(result)
+        setReviews(result);
+      } else {
+        console.error("Failed to fetch reviews");
+      }
+    } catch (err) {
+      console.error("Error fetching reviews:", err);
+    }
+  };
+
+  useEffect(() => {
+    getReviews();
+    const interval = setInterval(() => {
+      getReviews();
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Modal>
       <motion.div
@@ -654,14 +699,20 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
               selectedTimeSlot={selectedTimeSlot}
               onTimeSlotSelected={handleTimeSlotSelected}
             />
+
+            <p className="text-lg md:text-1xl text-neutral-600 dark:text-neutral-400">Reviews</p>
+            <ReviewBar reviews={reviews} />
+            
             <Textarea
               // key={variant}
               variant={"underlined"}
+              className="my-2"
               label="Reason"
               labelPlacement="outside"
               placeholder="Enter your Reason"
               onChange={(e) => setSelectedReason(e.target.value)}
             />
+
           </div>
         </ModalContent>
         <ModalFooter className="gap-4">
@@ -676,6 +727,59 @@ const SkeletonTwo = ({ docType }: { docType: string }) => {
     </Modal>
   );
 };
+
+
+interface ReviewBarProps {
+  reviews: Reviews;
+}
+
+const ReviewBar: React.FC<ReviewBarProps> = ({ reviews }) => {
+  const totalReviews = reviews.positive.length + reviews.neutral.length + reviews.negative.length;
+
+  // Calculate the percentage of each review type
+  const positivePercentage = totalReviews > 0 ? (reviews.positive.length / totalReviews) * 100 : 0;
+  const neutralPercentage = totalReviews > 0 ? (reviews.neutral.length / totalReviews) * 100 : 0;
+  const negativePercentage = totalReviews > 0 ? (reviews.negative.length / totalReviews) * 100 : 0;
+
+  // Ensure the total width is 100% by rounding the percentages and checking sum
+  const sum = positivePercentage + neutralPercentage + negativePercentage;
+  const scale = sum > 100 ? 100 / sum : 1;  // Adjust percentages to fit the 100% range if necessary
+
+  return (
+    <div className="w-full h-4 bg-gray-200 rounded-full mt-4">
+      <div className="h-full flex rounded-full">
+        {/* Positive Reviews */}
+        {positivePercentage > 0 && (
+          <div
+            className="h-full bg-green-500"
+            style={{ width: `${(positivePercentage * scale)}%` }}
+          ></div>
+        )}
+
+        {/* Neutral Reviews */}
+        {neutralPercentage > 0 && (
+          <div
+            className="h-full bg-gray-300"
+            style={{ width: `${(neutralPercentage * scale)}%` }}
+          ></div>
+        )}
+
+        {/* Negative Reviews */}
+        {negativePercentage > 0 && (
+          <div
+            className="h-full bg-red-500"
+            style={{ width: `${(negativePercentage * scale)}%` }}
+          ></div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+
+
+
+
 
 type Request = {
   request_id: string;
