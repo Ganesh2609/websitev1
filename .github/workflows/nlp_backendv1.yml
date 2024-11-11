@@ -35,7 +35,7 @@ jobs:
       - name: Tar the client build folder for deployment
         run: |
           cd client
-          tar -czf ../client.tar.gz -C build .  # Create a tar.gz package from the build folder
+          tar -czf ../client.tar.gz -C dist .  # Update to match the correct build folder
         shell: bash
 
       - name: Upload artifact for deployment job
@@ -73,4 +73,3 @@ jobs:
           app-name: 'frontendv1'
           slot-name: 'Production'
           package: client.tar.gz  # Deploy the tar.gz package
-
