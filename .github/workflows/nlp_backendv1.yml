@@ -3,7 +3,7 @@ name: Build and deploy Node.js app to Azure Web App - frontendv1
 on:
   push:
     branches:
-      - finalcld
+      - nlp
   workflow_dispatch:
 
 jobs:
@@ -54,9 +54,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_1B1FA3E1C0BE4B30A25B6E2B9BCF3CF0 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_D8D3E375A7C34405AAB71299547ACF32 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_23C9575AAC884F9FA2B441F4A4A4504A }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_EE06B25B7FA2432285D9AB5CA74D2F31 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_52503BC1172545D78B216D2870DB5AEA }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9C14131A23094A529D407F2007B9C0B1 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
