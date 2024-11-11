@@ -11,9 +11,10 @@ const { Pool } = pkg;
 dotenv.config();
 
 const app = express();
-const port = 5000;
+const port = 5001;
 
-// // PostgreSQL connection pool
+// PostgreSQL connection pool
+
 // const pool = new Pool({
 //   user: process.env.DB_USER, // Your PostgreSQL username
 //   host: process.env.DB_HOST,
