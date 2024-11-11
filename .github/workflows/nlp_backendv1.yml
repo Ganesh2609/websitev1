@@ -1,4 +1,4 @@
-name: Build and deploy Node.js app to Azure Web App - frontendv1
+name: Build and deploy Node.js app to Azure Web App - backendv1
 
 on:
   push:
@@ -17,32 +17,23 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20.x'
-          
-      - name: Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
-      - name: npm install and build (Client Only)
+      - name: Install dependencies, build, and test
+        working-directory: client
         run: |
-          npm install --ci
+          npm install
           npm run build --if-present
-        working-directory: ./client  # Change to the client folder
+          npm run test --if-present
 
-      - name: Tar the client build folder for deployment
-        run: |
-          cd client
-          tar -czf ../client.tar.gz -C dist .  # Update to match the correct build folder
-        shell: bash
+      - name: Zip artifact for deployment
+        working-directory: client
+        run: zip -r ../release.zip .
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: client-app
-          path: client.tar.gz  # Upload the tar.gz package
+          name: node-app
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -51,13 +42,16 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write  # Required for requesting the JWT
+      id-token: write # This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: client-app
+          name: node-app
+
+      - name: Unzip artifact for deployment
+        run: unzip release.zip
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -66,10 +60,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_D8D3E375A7C34405AAB71299547ACF32 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_23C9575AAC884F9FA2B441F4A4A4504A }}
 
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
+      - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
         with:
-          app-name: 'frontendv1'
+          app-name: 'backendv1'
           slot-name: 'Production'
-          package: client.tar.gz  # Deploy the tar.gz package
+          package: .
