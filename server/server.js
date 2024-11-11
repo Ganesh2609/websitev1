@@ -1513,6 +1513,61 @@ app.post("/api/nurseAcceptAppointmentRequest/:requestId", async (req, res) => {
 
 
 
+// app.post("/api/appointments/:appointmentId/review", async (req, res) => {
+//   const { appointmentId } = req.params;
+//   const { rating, feedback } = req.body;
+
+//   if (typeof rating !== 'number' || rating < 1 || rating > 5) {
+//     return res.status(400).json({ message: "Rating must be a number between 1 and 5." });
+//   }
+
+//   if (!feedback || feedback.trim() === "") {
+//     return res.status(400).json({ message: "Feedback cannot be empty." });
+//   }
+
+//   try {
+//     const result1 = await pool.query(
+//       `SELECT patient_id, doctor_id FROM appointments WHERE appointment_id = $1`,
+//       [appointmentId]
+//     );
+
+//     if (result1.rows.length === 0) {
+//       return res.status(404).json({ message: "Appointment not found." });
+//     }
+
+    
+//     const result = await client.analyzeSentiment([feedback]);
+//     const sentimentResult = result[0]["sentiment"]
+//     console.log(sentimentResult)
+    
+//     await pool.query(
+//       `INSERT INTO reviews (appointment_id, patient_id, doctor_id, rating, feedback, sentiment) 
+//        VALUES ($1, $2, $3, $4, $5, $6)`,
+//       [
+//         appointmentId,
+//         result1.rows[0].patient_id,
+//         result1.rows[0].doctor_id,
+//         rating,
+//         feedback,
+//         sentimentResult
+//       ]
+//     );
+
+//     const result3 = await pool.query(
+//       `UPDATE appointments SET status = 'reviewed' WHERE appointment_id = $1`,
+//       [appointmentId]
+//     );
+
+//     return res.status(200).json({ message: "Review submitted successfully!" });
+
+//   } catch (error) {
+//     console.error("Error submitting review:", error);
+//     return res.status(500).json({ message: "Internal Server Error" });
+//   }
+// });
+
+
+
 app.post("/api/appointments/:appointmentId/review", async (req, res) => {
   const { appointmentId } = req.params;
   const { rating, feedback } = req.body;
@@ -1526,6 +1581,17 @@ app.post("/api/appointments/:appointmentId/review", async (req, res) => {
   }
 
   try {
+    const wordCount = feedback.trim().split(/\s+/).length;
+
+    let shortenedFeedback = feedback;
+    if (wordCount > 16) {
+      const result = await client.extractKeyPhrases([feedback], "en");
+      const keyPhrases = result[0].keyPhrases;
+      shortenedFeedback = keyPhrases.slice(0, 5).join(", ");
+    }
+
+    const sentimentResult = await client.analyzeSentiment([shortenedFeedback]);
+
     const result1 = await pool.query(
       `SELECT patient_id, doctor_id FROM appointments WHERE appointment_id = $1`,
       [appointmentId]
@@ -1535,11 +1601,6 @@ app.post("/api/appointments/:appointmentId/review", async (req, res) => {
       return res.status(404).json({ message: "Appointment not found." });
     }
 
-    
-    const result = await client.analyzeSentiment([feedback]);
-    const sentimentResult = result[0]["sentiment"]
-    console.log(sentimentResult)
-    
     await pool.query(
       `INSERT INTO reviews (appointment_id, patient_id, doctor_id, rating, feedback, sentiment) 
        VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -1548,12 +1609,12 @@ app.post("/api/appointments/:appointmentId/review", async (req, res) => {
         result1.rows[0].patient_id,
         result1.rows[0].doctor_id,
         rating,
-        feedback,
-        sentimentResult
+        shortenedFeedback,
+        sentimentResult[0]["sentiment"]
       ]
     );
 
-    const result3 = await pool.query(
+    await pool.query(
       `UPDATE appointments SET status = 'reviewed' WHERE appointment_id = $1`,
       [appointmentId]
     );
