@@ -1,3 +1,6 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
 name: Build and deploy Node.js app to Azure Web App - backendv1
 
 on:
@@ -18,26 +21,20 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            npm-
-
-      - name: npm install, build, and test (Server Only)
+      - name: npm install, build, and test
         run: |
           npm install
           npm run build --if-present
           npm run test --if-present
-        working-directory: ./server  # Set the working directory to server
+
+      - name: Zip artifact for deployment
+        run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: server-app
-          path: ./server  # Upload the server folder directly
+          name: node-app
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -46,21 +43,23 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write # Required for requesting the JWT
+      id-token: write #This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: server-app
-          path: ./server
+          name: node-app
 
-      - name: Azure login
+      - name: Unzip artifact for deployment
+        run: unzip release.zip
+      
+      - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_6FC5F0C9FEF240BB8F9AE8E4C0587A75 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F8319BA5BEAC4E1198CF9DBA44AD940C }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_71D9A362E5C342DCA6E04B32548BCBC4 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_01BFB4D88AD34BE2A403801E5F7A53E1 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2DB30484DBBA4A259E692A3CD0395646 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_222CD23AC35D42339BFADFAED208B693 }}
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
@@ -68,4 +67,5 @@ jobs:
         with:
           app-name: 'backendv1'
           slot-name: 'Production'
-          package: ./server  # Deploy the server directory
+          package: .
+          
