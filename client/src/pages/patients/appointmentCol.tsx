@@ -5,7 +5,7 @@ import { Appointment } from "@/types/types";
 import { StatusBadge } from "@/components/StatusBadge";
 
 import { getProperDate } from "@/lib/utils";
-import AppointmentActions from "../doctors/AppintmentActions";
+import AppointmentActions from "../patients/AppintmentActions";
 
 export const columns: ColumnDef<Appointment>[] = [
   {

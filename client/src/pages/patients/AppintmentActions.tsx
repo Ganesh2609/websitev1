@@ -12,14 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, X, Star } from "lucide-react";
 import { Appointment } from "@/types/types";
 
-const CancelAppointment = ({
-  appointment,
-  onAppointmentCancel,
-}: {
-  appointment: Appointment;
-  onAppointmentCancel: () => void;
-  onReviewSubmit: (rating: number, review: string) => void;
-}) => {
+const CancelAppointment = ({ appointment }: { appointment: Appointment }) => {
   const [cancellationReason, setCancellationReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,8 +45,7 @@ const CancelAppointment = ({
 
       await response.json();
       alert("Appointment cancelled successfully!");
-      onAppointmentCancel();
-    } catch (err:any) {
+    } catch (err: any) {
       setError(err.message);
       console.error("Error cancelling appointment:", err);
     } finally {
@@ -87,7 +79,7 @@ const CancelAppointment = ({
 
       await response.json();
       alert("Review submitted successfully!");
-    } catch (err:any) {
+    } catch (err: any) {
       setError(err.message || "An error occurred while submitting the review");
       console.error("Error submitting review:", err);
     }
@@ -223,7 +215,11 @@ const CancelAppointment = ({
                 appointment.status === "scheduled"
                   ? "bg-danger hover:bg-danger-700"
                   : ""
-              } text-white ${loading || !validateForm() ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } text-white ${
+                loading || !validateForm()
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
             >
               {loading ? (
                 "Processing..."
@@ -243,7 +239,9 @@ const CancelAppointment = ({
                 appointment.status === "completed"
                   ? "bg-warning hover:bg-warning-600"
                   : ""
-              } text-white ${loading || rating === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } text-white ${
+                loading || rating === 0 ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               {loading ? "Processing..." : "Submit Review"}
             </Button>
