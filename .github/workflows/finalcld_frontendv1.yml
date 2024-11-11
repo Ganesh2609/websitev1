@@ -25,11 +25,11 @@ jobs:
           npm run test --if-present
         working-directory: ./client  # Change to the client folder
       
-      - name: Zip the client folder for deployment
+      - name: Zip the client folder for deployment (Windows)
         run: |
-          cd client
-          zip -r ../client.zip .
-      
+          Compress-Archive -Path './client/*' -DestinationPath './client.zip'
+        shell: pwsh  # Use PowerShell to run the compression command
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
