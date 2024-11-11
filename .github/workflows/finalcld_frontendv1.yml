@@ -31,7 +31,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: ./client
 
   deploy:
     runs-on: ubuntu-latest
@@ -61,5 +61,5 @@ jobs:
         with:
           app-name: 'frontendv1'
           slot-name: 'Production'
-          package: .
+          package: ./client
           
