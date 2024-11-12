@@ -18,7 +18,6 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <BrowserRouter>
         <Routes>
-          {/* <Route path="/" element={} /> */}
           <Route path="/" element={<AuthPage />} />
           <Route path="/admin/doctor" element={<ManageDoctor />} />
           <Route path="/admin/nurse" element={<ManageNurse />} />
