@@ -19,7 +19,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* <Route path="/" element={} /> */}
-          <Route path="/Auth" element={<AuthPage />} />
+          <Route path="/" element={<AuthPage />} />
           <Route path="/admin/doctor" element={<ManageDoctor />} />
           <Route path="/admin/nurse" element={<ManageNurse />} />
           <Route path="/admin/specialization" element={<ManageSpecialization />} />
