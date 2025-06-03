@@ -1,50 +1,156 @@
-# React + TypeScript + Vite
+# 🏥 Hospital Management System (HMS)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A comprehensive web-based hospital management solution built with React, TypeScript, and Node.js, deployed on Azure with PostgreSQL database integration.
 
-Currently, two official plugins are available:
+## 🌐 Live Demo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+[HMS Live Demo](https://frontendv1.azurewebsites.net)
 
-## Expanding the ESLint configuration
+## 📋 Overview
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+The Hospital Management System (HMS) is a modern, full-stack application designed to streamline healthcare operations. It provides a unified platform for managing patient information, doctor schedules, appointments, and administrative tasks.
 
-- Configure the top-level `parserOptions` property like this:
+The system supports three primary user roles:
+- **Patients**: Schedule appointments, manage personal health records
+- **Doctors**: View appointments, manage patient treatments
+- **Administrators**: Manage system users, specializations, and overall system settings
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 🛠️ Technology Stack
+
+### Frontend
+- **React 18** with TypeScript
+- **Vite** for fast development and building
+- **Tailwind CSS** for styling
+- **ShadCN UI** and **NextUI** component libraries
+- **React Router** for navigation
+- **React Hook Form** with Zod for form validation
+- **Axios** for API requests
+- **Framer Motion** for animations
+
+### Backend
+- **Node.js** with Express
+- **PostgreSQL** database
+- **JWT** for authentication
+- **Bcrypt** for password hashing
+- **Multer** for file uploads
+
+### Deployment
+- **Azure Web App** for hosting
+- **GitHub Actions** for CI/CD
+
+## 🔑 Key Features
+
+### Patient Portal
+- User registration and profile management
+- Appointment scheduling with doctor selection
+- View upcoming and past appointments
+- Cancel appointments
+- Receive notifications
+
+### Doctor Portal
+- View scheduled appointments
+- Manage patient treatments
+- Add medical notes and billing information
+- Complete appointment workflows
+
+### Admin Dashboard
+- Add/remove doctors and nurses
+- Manage specializations
+- Monitor system activity
+
+## 🏗️ Project Structure
+
+```
+├── client/                # Frontend React application
+│   ├── src/
+│   │   ├── components/    # Reusable UI components
+│   │   ├── pages/         # Page components for different routes
+│   │   ├── lib/           # Utility functions and API actions
+│   │   ├── types/         # TypeScript type definitions
+│   │   └── assets/        # Static assets (images, icons)
+│
+├── server.js              # Express server and API endpoints
+├── .env                   # Environment variables
+└── .github/workflows/     # CI/CD configuration
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## 💻 Development Setup
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+### Prerequisites
+- Node.js (v18+)
+- PostgreSQL database
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+### Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/hospital-management-system.git
+cd hospital-management-system
 ```
+
+2. Install dependencies
+```bash
+npm install
+cd client
+npm install
+```
+
+3. Configure environment variables
+Create a `.env` file in the root directory with the following:
+```
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_NAME=hms
+DB_HOST=localhost
+DB_PORT=5432
+```
+
+4. Run the application
+```bash
+# Run backend server
+node server.js
+
+# In a separate terminal, run frontend
+cd client
+npm run dev
+```
+
+## 🚀 Database Schema
+
+The system uses a relational database with the following key tables:
+
+- **users**: Basic user authentication and role information
+- **patients**: Patient profile and medical information
+- **doctors**: Doctor information and specializations
+- **nurses**: Nursing staff information
+- **appointment_requests**: Pending appointment requests
+- **appointments**: Confirmed appointments
+- **appointment_slots**: Available time slots for appointments
+- **medical_specializations**: Types of medical specialties
+- **treatment_history**: Patient treatment records
+- **billing**: Payment and billing information
+- **notifications**: System notifications
+
+## 🔐 Authentication Flow
+
+1. User registers with username, email, password, and role
+2. Passwords are hashed using bcrypt before storage
+3. On login, credentials are verified and role-based access is granted
+4. JWT tokens manage authenticated sessions
+
+## 📱 Responsive Design
+
+The application is fully responsive, providing optimal user experience across:
+- Desktop computers
+- Tablets
+- Mobile devices
+
+## 🔄 Appointment Workflow
+
+1. Patient selects a doctor and preferred date/time
+2. System checks doctor availability
+3. Patient submits appointment request with reason
+4. Doctor reviews and approves/rejects request
+5. Upon approval, appointment is confirmed and added to schedules
+6. After the appointment, doctor adds treatment details and billing information
+7. Notifications are sent at each step of the process
