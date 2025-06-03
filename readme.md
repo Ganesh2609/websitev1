@@ -2,10 +2,6 @@
 
 A comprehensive web-based hospital management solution built with React, TypeScript, and Node.js, deployed on Azure with PostgreSQL database integration.
 
-## 🌐 Live Demo
-
-[HMS Live Demo](https://frontendv1.azurewebsites.net)
-
 ## 📋 Overview
 
 The Hospital Management System (HMS) is a modern, full-stack application designed to streamline healthcare operations. It provides a unified platform for managing patient information, doctor schedules, appointments, and administrative tasks.
